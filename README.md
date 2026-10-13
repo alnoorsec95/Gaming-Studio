@@ -10,6 +10,8 @@ games/horizon-paths.html        لعبة «دروب الأفق» — إعداد 
 games/pearl-sudoku.html         لعبة «سودوكو اللؤلؤ»
 games/who-wants-to-be-a-millionaire.html   لعبة «من سيربح المليون؟ – النسخة البحرينية» — إعداد الطالبة أطياب منصور
 games/fox-lightning.html        لعبة «برق الثعلب»
+games/dilmun-land.html          لعبة «أرض دلمون»
+games/little-detective.html     لعبة «المحقق الصغير» — إعداد الطالبتين زهراء علي المختار ورقية حسين الحايكي
 assets/                         صور أغلفة الألعاب
 ```
 
