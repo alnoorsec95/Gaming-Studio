@@ -105,6 +105,53 @@ footer b{font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.5px; 
 .play[disabled],.play[disabled]:hover{cursor:default; background:#E4DCD6; color:#8A7B72; box-shadow:none; transform:none}
 .play[disabled]::before{display:none}
 .play[disabled] svg{display:none}
+/* SOCIAL */
+.social{display:flex; align-items:center; gap:8px; margin:-4px 0 14px}
+.sbtn{display:inline-flex; align-items:center; gap:7px; padding:7px 14px; border-radius:999px; border:1.5px solid rgba(206,17,38,.25);
+  background:transparent; color:var(--ink); font:inherit; font-weight:800; cursor:pointer; transition:.18s}
+.sbtn:hover{background:rgba(206,17,38,.08); border-color:var(--red)}
+.sbtn svg{width:20px; height:20px; flex:none}
+.sbtn.like[aria-pressed="true"]{color:var(--red); border-color:var(--red); background:rgba(206,17,38,.1)}
+.sbtn.like[aria-pressed="true"] svg{fill:var(--red); animation:beat .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes beat{0%{transform:scale(.6)}60%{transform:scale(1.35)}100%{transform:scale(1)}}
+.plays{margin-inline-start:auto; display:inline-flex; align-items:center; gap:6px; color:var(--sub); font-weight:700; font-size:.92rem}
+.plays svg{width:16px; height:16px}
+#cm{position:fixed; inset:0; z-index:90; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(0,0,0,.58)}
+#cm.open{display:flex}
+.cpanel{width:min(640px,100%); max-height:min(88vh,780px); display:flex; flex-direction:column; background:var(--card); color:var(--ink);
+  border-radius:18px; box-shadow:0 30px 70px rgba(0,0,0,.5); overflow:hidden; text-align:start}
+.chead{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 20px; border-bottom:1px solid rgba(128,128,128,.25)}
+.chead h4{margin:0; font-size:1.2rem; font-weight:900}
+.chead small{display:block; color:var(--sub); font-weight:600}
+.cx{flex:none; border:0; background:transparent; color:var(--ink); font-size:1.3rem; cursor:pointer; width:38px; height:38px; border-radius:50%}
+.cx:hover{background:rgba(128,128,128,.22)}
+.cbody{overflow:auto; padding:18px 20px calc(18px + env(safe-area-inset-bottom,0px))}
+.composer{position:relative; display:flex; gap:14px; margin-bottom:24px}
+.av{flex:none; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; color:#fff; font-weight:900; font-size:1.05rem}
+.cfield{flex:1; min-width:0}
+.cinput{display:block; width:100%; border:0; border-bottom:2px solid rgba(128,128,128,.45); background:transparent; color:inherit; font:inherit; padding:6px 0 8px; outline:0; resize:none; overflow:hidden}
+.cinput:focus{border-bottom-color:var(--ink)}
+.cextra{display:none; margin-top:12px}
+.composer.active .cextra{display:block}
+.cname{width:min(260px,100%); border:1.5px solid rgba(128,128,128,.45); border-radius:10px; padding:8px 12px; background:transparent; color:inherit; font:inherit}
+.cbtns{display:flex; align-items:center; gap:8px; margin-top:10px}
+.ccount{margin-inline-end:auto; color:var(--sub); font-size:.85rem}
+.cbtn{border:0; border-radius:999px; padding:9px 20px; font:inherit; font-weight:800; cursor:pointer}
+.cbtn.cancel{background:transparent; color:var(--ink)}
+.cbtn.cancel:hover{background:rgba(128,128,128,.2)}
+.cbtn.send{background:var(--red); color:#fff}
+.cbtn.send:disabled{background:rgba(128,128,128,.3); color:rgba(128,128,128,.95); cursor:default}
+.cnote{margin:0 0 16px; padding:10px 14px; border-radius:12px; background:rgba(245,184,0,.18); border:1px solid rgba(245,184,0,.55); font-weight:600; font-size:.92rem; line-height:1.7}
+.cmod{margin:0 0 20px; padding:12px 14px; border-radius:14px; border:2px dashed var(--gold)}
+.cmod>b{display:block; margin-bottom:12px}
+.cmod .citem{margin-bottom:6px}
+.citem{display:flex; gap:14px; margin-bottom:22px}
+.cmain{min-width:0; flex:1}
+.cmeta{display:flex; gap:8px; align-items:baseline; flex-wrap:wrap}
+.cmeta b{font-size:.95rem}
+.cmeta span{color:var(--sub); font-size:.82rem}
+.ctext{margin:4px 0 0; line-height:1.75; white-space:pre-wrap; overflow-wrap:anywhere}
+.cempty{text-align:center; color:var(--sub); padding:24px 0; font-weight:600}
 .toast{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); transform:translate(-50%,120px); z-index:20;
   background:var(--ink); color:var(--bg); padding:12px 24px; border-radius:999px; font-weight:700; transition:transform .4s cubic-bezier(.2,1.2,.4,1); max-width:90vw; text-align:center}
 .toast.show{transform:translate(-50%,0)}
@@ -138,6 +185,25 @@ footer b{font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.5px; 
   <b>Al Noor School Gaming Studio</b>
   مدرسة النور الثانوية للبنات — مملكة البحرين
 </footer>
+<div id="cm" role="dialog" aria-modal="true" aria-labelledby="cmh"><div class="cpanel">
+  <div class="chead"><div><h4 id="cmh"><span id="cmn">0</span> تعليق</h4><small id="cmg"></small></div><button class="cx" id="cmx" type="button" aria-label="إغلاق">✕</button></div>
+  <div class="cbody">
+    <div id="cdemo"></div>
+    <div class="composer" id="comp">
+      <div class="av" id="cav">؟</div>
+      <div class="cfield">
+        <textarea class="cinput" id="ctext" rows="1" maxlength="500" placeholder="إضافة تعليق…" aria-label="إضافة تعليق"></textarea>
+        <input type="text" id="chp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+        <div class="cextra">
+          <input class="cname" id="cname" maxlength="30" placeholder="الاسم (اختياري)" aria-label="الاسم">
+          <div class="cbtns"><span class="ccount" id="ccount">0/500</span><button class="cbtn cancel" id="ccancel" type="button">إلغاء</button><button class="cbtn send" id="csend" type="button" disabled>تعليق</button></div>
+        </div>
+      </div>
+    </div>
+    <p class="cnote" id="cnote" hidden></p>
+    <div id="clist"></div>
+  </div>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -156,6 +222,45 @@ const GAMES = [
   {title:"سفينة دلمون",         by:"", soon:true, url:"", theme:"ship"},
   {title:"حديقة النور",         by:"", soon:true, url:"", theme:"garden"}
 ];
+
+/* ===== الإعجابات والتعليقات وعدّاد اللعب =====
+   endpoint: رابط Google Apps Script بعد النشر (الخطوات في backend/SETUP-ar.md).
+   إذا تُرك فارغاً يعمل الموقع بالوضع التجريبي (البيانات تُحفظ على جهاز الزائر فقط). */
+const SOCIAL={endpoint:""};
+GAMES.forEach((g,i)=>{g.id=g.id||(g.url?g.url.split("/").pop().replace(/\.html$/,""):"game-"+(i+1));});
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const uid=()=>(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
+const Store=(()=>{
+  const U=SOCIAL.endpoint, demo=!U;
+  const D=()=>ls.get("alnoor_demo",{games:{},comments:[]}), W=d=>ls.set("alnoor_demo",d);
+  const post=async o=>{const r=await fetch(U,{method:"POST",body:JSON.stringify(o)});if(!r.ok)throw new Error("net");return r.json();};
+  const get=async q=>{const r=await fetch(U+"?"+new URLSearchParams(q));if(!r.ok)throw new Error("net");return r.json();};
+  const bump=(id,k,n)=>{const d=D(),g=d.games[id]=d.games[id]||{likes:0,plays:0};g[k]=Math.max(0,(g[k]||0)+n);W(d);};
+  return {demo,
+    async stats(){ if(!demo) return (await get({action:"stats"})).stats||{};
+      const d=D(),o={};for(const id in d.games)o[id]={likes:d.games[id].likes||0,plays:d.games[id].plays||0,comments:0};
+      d.comments.filter(c=>c.approved).forEach(c=>{(o[c.game]=o[c.game]||{likes:0,plays:0,comments:0}).comments++;});return o;},
+    async like(id,n){ if(demo) return bump(id,"likes",n); await post({action:"like",game:id,delta:n}); },
+    async play(id){ if(demo) return bump(id,"plays",1); await post({action:"play",game:id}); },
+    async comments(id){ if(!demo) return (await get({action:"comments",game:id})).comments||[];
+      return D().comments.filter(c=>c.game===id&&c.approved).sort((a,b)=>b.time.localeCompare(a.time)); },
+    async add(id,name,text){ if(demo){const d=D();d.comments.push({id:uid(),game:id,name,text,time:new Date().toISOString(),approved:false});W(d);return;}
+      const r=await post({action:"comment",game:id,name,text}); if(r.error) throw new Error(r.error); },
+    pending(id){ return D().comments.filter(c=>c.game===id&&!c.approved); },
+    approve(cid){const d=D();d.comments.forEach(c=>{if(c.id===cid)c.approved=true});W(d);},
+    remove(cid){const d=D();d.comments=d.comments.filter(c=>c.id!==cid);W(d);}
+  };
+})();
+const fmt=n=>{n=n||0;return n>=1000?(n/1000).toFixed(n>=10000?0:1).replace(/\.0$/,"")+"K":String(n)};
+const AGO=[["سنة","سنتين","سنوات",31536000],["شهر","شهرين","أشهر",2592000],["يوم","يومين","أيام",86400],["ساعة","ساعتين","ساعات",3600],["دقيقة","دقيقتين","دقائق",60]];
+const ago=t=>{const s=(Date.now()-new Date(t).getTime())/1000;if(!(s>=60))return"الآن";for(const[a,b,c,n]of AGO){const k=Math.floor(s/n);if(k>=1)return"منذ "+(k===1?a:k===2?b:k+" "+(k<=10?c:a));}return"الآن";};
+const AVC=["#CE1126","#7E0A19","#1AA7C7","#2E8B57","#6B2D5C","#D98A3D","#0B4F6C"];
+const avatar=(el,name)=>{name=(name||"").trim();let h=0;for(const c of name)h=(h*31+c.codePointAt(0))>>>0;el.textContent=Array.from(name)[0]||"؟";el.style.background=AVC[h%AVC.length];};
+const socialBar=g=>`<div class="social" data-id="${g.id}">
+        <button class="sbtn like" type="button" aria-pressed="false" aria-label="إعجاب"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg><span class="n">0</span></button>
+        <button class="sbtn cmt" type="button" aria-label="التعليقات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg><span class="n">0</span></button>
+        <span class="plays" title="عدد مرات اللعب"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span class="n">0</span> مرّة</span>
+      </div>`;
 
 /* ---- generated cover art (used when no img is given) ---- */
 const rnd=(s=>()=>(s=(s*9301+49297)%233280)/233280);
@@ -194,6 +299,7 @@ $("#grid").innerHTML=GAMES.map((g,i)=>`
     <div class="body">
       <h3>${g.title}</h3>
       ${g.by?`<p class="by"><b>${/[·،&]/.test(g.by)?"إعداد الطالبات":"إعداد الطالبة"}:</b><br>${g.by}</p>`:""}
+      ${g.soon?"":socialBar(g)}
       <button class="play" type="button" data-i="${i}"${g.soon?" disabled":""}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>${g.soon?"قريباً":"PLAY"}
       </button>
@@ -204,7 +310,7 @@ const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");clea
 document.addEventListener("click",e=>{
   const b=e.target.closest(".play"); if(!b||b.disabled) return;
   const g=GAMES[b.dataset.i];
-  g.url ? window.open(g.url,"_blank","noopener") : toast("رابط لعبة «"+g.title+"» سيُضاف قريباً 🎮");
+  g.url ? launch(g) : toast("رابط لعبة «"+g.title+"» سيُضاف قريباً 🎮");
 });
 document.querySelectorAll(".card").forEach(c=>{
   c.addEventListener("mousemove",e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
@@ -217,6 +323,71 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{
     const step=t=>{const p=Math.min((t-t0)/900,1);$("#cnt").textContent=Math.round(p*n);if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);}
 }),{threshold:.18});
 document.querySelectorAll(".wrap,#head").forEach(el=>io.observe(el));
+
+/* ===== social wiring ===== */
+let STATS={}; const liked=new Set(ls.get("alnoor_liked",[])); const lastPlay={};
+const st=id=>STATS[id]||(STATS[id]={likes:0,plays:0,comments:0});
+const paint=id=>{const box=document.querySelector(`.social[data-id="${id}"]`);if(!box)return;const s=st(id);
+  box.querySelector(".like .n").textContent=fmt(s.likes);box.querySelector(".cmt .n").textContent=fmt(s.comments);box.querySelector(".plays .n").textContent=fmt(s.plays);
+  box.querySelector(".like").setAttribute("aria-pressed",String(liked.has(id)));};
+const paintAll=()=>GAMES.forEach(g=>{if(!g.soon)paint(g.id)});
+const launch=g=>{const now=Date.now();
+  if(now-(lastPlay[g.id]||0)>10000){lastPlay[g.id]=now;st(g.id).plays++;paint(g.id);Store.play(g.id).catch(()=>{});}
+  window.open(g.url,"_blank","noopener");};
+const toggleLike=id=>{const on=!liked.has(id),s=st(id),d=on?1:-1;
+  on?liked.add(id):liked.delete(id);s.likes=Math.max(0,s.likes+d);ls.set("alnoor_liked",[...liked]);paint(id);
+  Store.like(id,d).catch(()=>{on?liked.delete(id):liked.add(id);s.likes=Math.max(0,s.likes-d);ls.set("alnoor_liked",[...liked]);paint(id);toast("تعذّر الاتصال، يرجى المحاولة لاحقاً");});};
+
+const cm=$("#cm"),ct=$("#ctext"),cn=$("#cname"),csend=$("#csend"),comp=$("#comp");let cur=null,opener=null;
+const setSend=()=>{csend.disabled=ct.value.trim().length<2;$("#ccount").textContent=ct.value.length+"/500";};
+const grow=()=>{ct.style.height="auto";ct.style.height=ct.scrollHeight+"px";};
+const resetComposer=()=>{ct.value="";ct.style.height="";comp.classList.remove("active");$("#chp").value="";setSend();};
+const row=(c,extra)=>{const d=document.createElement("div");d.className="citem";
+  const a=document.createElement("div");a.className="av";avatar(a,c.name);
+  const b=document.createElement("div");b.className="cmain";
+  const m=document.createElement("div");m.className="cmeta";
+  const n=document.createElement("b");n.textContent=c.name||"زائر";const t=document.createElement("span");t.textContent=ago(c.time);m.append(n,t);
+  const p=document.createElement("p");p.className="ctext";p.textContent=c.text;b.append(m,p);if(extra)b.append(extra);d.append(a,b);return d;};
+const renderDemo=()=>{const box=$("#cdemo");box.textContent="";if(!Store.demo||!cur)return;
+  const n=document.createElement("p");n.className="cnote";
+  n.textContent="وضع تجريبي: الإعجابات والتعليقات وعدّاد اللعب محفوظة على هذا الجهاز فقط. لمشاركتها بين كل الزوار يلزم ربط الموقع بجدول Google (راجع backend/SETUP-ar.md).";box.append(n);
+  const pend=Store.pending(cur.id);if(!pend.length)return;
+  const w=document.createElement("div");w.className="cmod";const h=document.createElement("b");h.textContent="لوحة المشرف (تجريبية) — تعليقات بانتظار الموافقة";w.append(h);
+  pend.forEach(c=>{const act=document.createElement("div");act.className="cbtns";
+    const ok=document.createElement("button");ok.type="button";ok.className="cbtn send";ok.textContent="موافقة";ok.onclick=()=>{Store.approve(c.id);$("#cnote").hidden=true;renderList();};
+    const no=document.createElement("button");no.type="button";no.className="cbtn cancel";no.textContent="حذف";no.onclick=()=>{Store.remove(c.id);renderDemo();};
+    act.append(ok,no);w.append(row(c,act));});box.append(w);};
+const renderList=async()=>{const l=$("#clist"),id=cur.id;l.textContent="جارٍ التحميل…";l.className="cempty";
+  try{const cs=await Store.comments(id);if(!cur||cur.id!==id)return;st(id).comments=cs.length;paint(id);$("#cmn").textContent=fmt(cs.length);
+    l.textContent="";l.className="";
+    if(!cs.length){l.className="cempty";l.textContent="لا توجد تعليقات بعد. شاركنا رأيك!";}else cs.forEach(c=>l.append(row(c)));}
+  catch(e){l.className="cempty";l.textContent="تعذّر تحميل التعليقات.";}
+  renderDemo();};
+const openComments=(g,btn)=>{cur=g;opener=btn;$("#cmg").textContent=g.title;$("#cmn").textContent=fmt(st(g.id).comments);
+  const nm=ls.get("alnoor_name","");cn.value=nm;avatar($("#cav"),nm);resetComposer();$("#cnote").hidden=true;
+  cm.classList.add("open");document.body.style.overflow="hidden";$("#cmx").focus();renderList();};
+const closeComments=()=>{cm.classList.remove("open");document.body.style.overflow="";cur=null;if(opener)opener.focus();};
+ct.addEventListener("focus",()=>comp.classList.add("active"));
+ct.addEventListener("input",()=>{setSend();grow();});
+cn.addEventListener("input",()=>avatar($("#cav"),cn.value));
+$("#ccancel").onclick=resetComposer;
+$("#cmx").onclick=closeComments;
+cm.addEventListener("click",e=>{if(e.target===cm)closeComments();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&cm.classList.contains("open"))closeComments();});
+csend.onclick=async()=>{if(csend.disabled||!cur)return;
+  const text=ct.value.trim(),name=(cn.value.trim()||"زائر").slice(0,30);
+  if($("#chp").value){resetComposer();return;}
+  if(Date.now()-ls.get("alnoor_last_c",0)<30000){toast("يرجى الانتظار قليلاً قبل إرسال تعليق آخر");return;}
+  csend.disabled=true;
+  try{await Store.add(cur.id,name,text);ls.set("alnoor_last_c",Date.now());ls.set("alnoor_name",cn.value.trim());
+    resetComposer();const n=$("#cnote");n.textContent="شكراً لمشاركتك! تم استلام تعليقك وسيظهر بعد موافقة المشرف ✔";n.hidden=false;renderDemo();}
+  catch(e){toast("تعذّر إرسال التعليق، يرجى المحاولة لاحقاً");setSend();}};
+document.addEventListener("click",e=>{
+  const lk=e.target.closest(".sbtn.like");if(lk){toggleLike(lk.closest(".social").dataset.id);return;}
+  const cb=e.target.closest(".sbtn.cmt");if(cb){openComments(GAMES.find(x=>x.id===cb.closest(".social").dataset.id),cb);}
+});
+paintAll();
+Store.stats().then(s=>{for(const id in s)Object.assign(st(id),s[id]);paintAll();}).catch(()=>{});
 </script>
 </body>
 </html>
