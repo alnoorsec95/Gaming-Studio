@@ -226,7 +226,7 @@ const GAMES = [
 /* ===== الإعجابات والتعليقات وعدّاد اللعب =====
    endpoint: رابط Google Apps Script بعد النشر (الخطوات في backend/SETUP-ar.md).
    إذا تُرك فارغاً يعمل الموقع بالوضع التجريبي (البيانات تُحفظ على جهاز الزائر فقط). */
-const SOCIAL={endpoint:""};
+const SOCIAL={endpoint:"https://script.google.com/macros/s/AKfycbwLYU3UvkW45XdCZv2hZW25g7oyyUFIug_oNFx590zEk7-l0PLzyp8TgB5Gv0kq0YkV/exec"};
 GAMES.forEach((g,i)=>{g.id=g.id||(g.url?g.url.split("/").pop().replace(/\.html$/,""):"game-"+(i+1));});
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const uid=()=>(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
