@@ -221,6 +221,22 @@
    "updated": "",
    "rev": "mv8ag90n",
    "note": ""
+  },
+  {
+   "id": "crumbles-cake-shop",
+   "title": "Crumbles - Cake Shop",
+   "by": "لمى فاضل -فاطمة خليل -فاطمة عبدالحسين",
+   "url": "games/crumbles-cake-shop/index.html",
+   "img": "assets/crumbles-cake-shop.jpg",
+   "tags": [
+    "arcade"
+   ],
+   "theme": "race",
+   "soon": false,
+   "added": "2026-10-14T15:56:09.555Z",
+   "updated": "",
+   "rev": "mv8al1ar",
+   "note": ""
   }
  ]
 }

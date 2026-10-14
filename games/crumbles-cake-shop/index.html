@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crumbles - Cake Shop Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Lalezar&family=Nunito:wght@600;800&family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#BFE6D6; --on-bg:#3A2024; --sh:#3A2024;
+  --ink:#3A2024; --card:#ffffff; --muted:#7A5E62;
+  --berry:#E23D6B; --butter:#FFD966; --mint:#7CCBA9; --blue:#5B63D9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#12302A; --on-bg:#F7EBE3; --sh:#06110E; }
+}
+:root[data-theme="dark"]{ --bg:#12302A; --on-bg:#F7EBE3; --sh:#06110E; }
+*,*::before,*::after{ box-sizing:inherit; }
+[hidden]{ display:none !important; }
+html{ height:100%; overflow:hidden; }
+body{
+  margin:0; height:100%; position:relative; overflow:hidden;
+  padding-left:env(safe-area-inset-left,0px); padding-right:env(safe-area-inset-right,0px);
+  background-color:var(--bg);
+  background-image:radial-gradient(rgba(0,0,0,.07) 2px, transparent 2.5px);
+  background-size:24px 24px;
+  color:var(--ink);
+  font-family:'Nunito','Tajawal',Tahoma,system-ui,sans-serif;
+  font-size:17px; line-height:1.5;
+}
+h1,h2,h3,h4{ font-family:'Fredoka','Lalezar','Tajawal',Tahoma,sans-serif; font-weight:400; margin:0; line-height:1.2; }
+html[lang="en"] h1,html[lang="en"] h2,html[lang="en"] h3,html[lang="en"] h4,html[lang="en"] .btn,html[lang="en"] .brand,html[lang="en"] .logo{ font-weight:600; }
+p{ margin:0; }
+
+/* the game canvas: a fixed design size that JS scales to fit the screen */
+#app{ position:absolute; left:0; top:0; transform-origin:0 0; overflow:hidden; }
+.appRoot{ position:absolute; inset:0; display:flex; flex-direction:column; }
+.wrap{ flex:1; min-height:0; display:flex; flex-direction:column; padding:0 14px 12px; }
+.port .wrap{ padding:0 10px 8px; }
+
+/* awning + shop decor */
+.awning{ flex:none; display:flex; height:34px; overflow:hidden; margin-bottom:6px; }
+.awning i{ flex:1; background:var(--berry); border:3px solid var(--ink); border-top:0; border-radius:0 0 999px 999px / 0 0 26px 26px; margin-inline:-1.5px; height:30px; }
+.awning i:nth-child(even){ background:#fff; }
+.awning.rainbow i:nth-child(6n+1){ background:#FF6B6B; } .awning.rainbow i:nth-child(6n+2){ background:#FFB84D; }
+.awning.rainbow i:nth-child(6n+3){ background:#FFE066; } .awning.rainbow i:nth-child(6n+4){ background:#7CCBA9; }
+.awning.rainbow i:nth-child(6n+5){ background:#6DB7FF; } .awning.rainbow i:nth-child(6n+6){ background:#B58CFF; }
+.decorStrip{ flex:none; display:flex; flex-direction:column; overflow:hidden; width:100%; }
+.decorStrip svg{ display:block; width:100%; }
+
+/* hud */
+.hud{ flex:none; display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+.hudL{ display:flex; align-items:center; gap:8px; }
+.brand{ font-family:'Fredoka','Lalezar',sans-serif; font-size:1.7rem; color:var(--on-bg); line-height:1; }
+.port .brand{ display:none; }
+.port #homeBtn .btxt{ display:none; }
+.pills{ display:flex; gap:6px; }
+.pill{ display:inline-flex; align-items:center; gap:6px; background:var(--card); border:3px solid var(--ink); border-radius:999px; padding:0 12px; font-weight:800; font-size:.95rem; line-height:1.65; box-shadow:2px 2px 0 var(--sh); white-space:nowrap; }
+.port .pill{ padding:0 8px; font-size:.8rem; gap:4px; }
+.port .pills{ gap:4px; }
+.port .pills .pill:first-child{ display:none; }
+.steps{ flex:none; display:flex; gap:6px; list-style:none; margin:0 0 8px; padding:0; }
+.steps li{ flex:1; text-align:center; padding:1px 4px; border:3px solid var(--ink); border-radius:12px; background:var(--card); opacity:.6; font-weight:800; font-size:.9rem; line-height:1.5; white-space:nowrap; }
+.steps li b{ display:inline-grid; place-items:center; width:20px; height:20px; border-radius:50%; background:var(--ink); color:#fff; font-size:.75rem; margin-inline-end:4px; }
+.steps li.on{ background:var(--butter); opacity:1; box-shadow:2px 2px 0 var(--sh); }
+.steps li.done{ background:var(--mint); opacity:1; }
+.port .steps{ gap:4px; } .port .steps li{ font-size:.7rem; padding:0 2px; } .port .steps li b{ display:none; }
+
+/* cards + board */
+.card{ background:var(--card); border:3px solid var(--ink); border-radius:22px; box-shadow:5px 5px 0 var(--sh); padding:14px; }
+.port .card{ padding:10px; border-radius:18px; box-shadow:3px 3px 0 var(--sh); }
+.board{ flex:1; min-height:0; display:grid; gap:12px; grid-template-columns:250px minmax(0,1fr); grid-template-rows:minmax(0,1fr); }
+.board > *{ min-height:0; min-width:0; }
+.port .board{ grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); gap:8px; }
+.board.solo{ grid-template-columns:minmax(0,1fr); }
+.port .board.solo{ grid-template-rows:minmax(0,1fr); }
+.board.solo .client{ display:none; }
+
+/* customer card */
+.client{ display:flex; flex-direction:column; gap:6px; overflow:hidden; }
+.face{ flex:none; width:84px; margin:0 auto; animation:pop .45s cubic-bezier(.3,1.6,.5,1); }
+.custSvg{ width:100%; height:auto; display:block; }
+.cinfo{ display:flex; flex-direction:column; gap:4px; }
+.cname{ font-size:1.5rem; text-align:center; }
+.ticket{ background:#FFF4CC; border:2.5px dashed var(--ink); border-radius:14px; padding:8px 10px; display:grid; gap:5px; }
+.trow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.tl{ min-width:58px; font-weight:800; color:var(--muted); font-size:.88rem; }
+.tops{ display:flex; gap:5px; flex-wrap:wrap; }
+.chip{ display:inline-flex; align-items:center; gap:6px; background:#fff; border:2px solid var(--ink); border-radius:999px; padding:0 10px; font-weight:700; font-size:.92rem; line-height:1.8; }
+.dot{ width:14px; height:14px; border-radius:50%; border:2px solid var(--ink); display:inline-block; }
+.patience{ display:flex; align-items:center; gap:8px; font-weight:700; font-size:.85rem; color:var(--muted); }
+.pbarTrack{ flex:1; height:12px; border:2.5px solid var(--ink); border-radius:999px; background:#fff; overflow:hidden; }
+.pbarTrack i{ display:block; height:100%; width:100%; background:var(--mint); transition:width .25s linear; }
+.port .client{ display:grid; grid-template-columns:56px 1fr; grid-template-areas:"face info" "ticket ticket"; gap:4px 10px; align-items:center; }
+.port .face{ grid-area:face; width:56px; margin:0; }
+.port .cinfo{ grid-area:info; gap:2px; }
+.port .ticketWrap{ grid-area:ticket; }
+.port .cname{ font-size:1.1rem; text-align:start; }
+.port .ticket{ display:flex; flex-wrap:wrap; gap:4px; padding:5px 7px; }
+.port .trow{ display:contents; } .port .tl{ display:none; } .port .tops{ display:contents; }
+.port .chip{ font-size:.78rem; padding:0 7px; line-height:1.6; }
+
+/* station */
+.station{ display:flex; flex-direction:column; min-height:0; overflow:hidden; padding:14px; }
+.station h3{ flex:none; font-size:1.5rem; }
+.port .station > h3{ display:none; }
+.sub{ flex:none; color:var(--muted); margin:0 0 6px; font-size:.95rem; line-height:1.35; }
+.port .sub{ font-size:.82rem; margin-bottom:4px; }
+.station > .stageSvg{ flex:1 1 0; min-height:50px; width:100%; max-width:440px; height:auto; margin:2px auto; display:block; }
+.swrow{ display:flex; flex-wrap:wrap; gap:6px; margin:4px 0; }
+.sw{ position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 9px; min-width:70px; background:#fff; border:3px solid var(--ink); border-radius:14px; cursor:pointer; font:inherit; font-size:.9rem; font-weight:700; color:var(--ink); touch-action:manipulation; line-height:1.2; }
+.sw .col{ width:26px; height:26px; border-radius:50%; border:3px solid var(--ink); }
+.sw.sel{ background:var(--butter); box-shadow:2px 2px 0 var(--sh); transform:translateY(-2px); }
+.sw .n{ position:absolute; top:-8px; inset-inline-start:-8px; min-width:20px; height:20px; border-radius:10px; background:var(--berry); color:#fff; border:2px solid var(--ink); font-size:.75rem; font-weight:800; display:grid; place-items:center; padding:0 4px; font-style:normal; }
+.port .sw{ min-width:0; padding:3px 5px; border-radius:12px; } .port .sw .lbl{ display:none; } .port .sw .col{ width:22px; height:22px; }
+.port #flRow .sw{ padding:5px 8px; font-size:.8rem; }
+.actions{ flex:none; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:6px 0 0; }
+.verdict{ flex:none; min-height:1.5em; text-align:center; font-weight:800; margin:2px 0; font-size:.95rem; }
+
+.btn{ font-family:'Fredoka','Lalezar','Tajawal',sans-serif; font-size:1.1rem; line-height:1.2; background:var(--berry); color:#fff; border:3px solid var(--ink); border-radius:16px; padding:.4em 1.1em; cursor:pointer; box-shadow:0 4px 0 var(--ink); transition:transform .08s, box-shadow .08s; touch-action:manipulation; margin:0 0 4px; }
+.btn:active:not(:disabled){ transform:translateY(3px); box-shadow:0 1px 0 var(--ink); }
+.btn:disabled{ opacity:.45; cursor:not-allowed; }
+.btn.alt{ background:var(--butter); color:var(--ink); }
+.btn.big{ font-size:1.35rem; padding:.4em 1.4em; }
+.btn.sm{ font-size:.95rem; padding:.25em .8em; box-shadow:0 3px 0 var(--ink); }
+.port .btn.big{ font-size:1.2rem; padding:.35em 1.1em; }
+.btn.hold{ touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+.btn.hold.on{ transform:translateY(3px); box-shadow:0 1px 0 var(--ink); background:#C72B57; }
+.homeBtn{ display:inline-flex; align-items:center; gap:6px; margin:0; }
+:focus-visible{ outline:4px solid var(--blue); outline-offset:3px; }
+
+/* order stage */
+.orderScene{ flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; }
+.orderScene .bigFace{ width:150px; flex:none; }
+.orderScene .oname{ display:block !important; font-size:1.7rem; }
+.orderScene .bubble{ max-width:560px; margin:10px 0 6px; font-size:1.15rem; }
+.orderScene .bubble::after{ inset-inline-end:auto; inset-inline-start:calc(50% - 11px); }
+.port .orderScene .bigFace{ width:120px; }
+.port .orderScene .bubble{ font-size:1rem; padding:12px 14px; }
+.bubble{ position:relative; background:#FFF4CC; border:3px solid var(--ink); border-radius:20px; padding:14px 18px; font-weight:700; }
+.bubble::after{ content:""; position:absolute; top:-12px; inset-inline-end:44px; width:20px; height:20px; background:#FFF4CC; border-top:3px solid var(--ink); border-inline-start:3px solid var(--ink); transform:rotate(45deg); }
+
+/* gauge + oven */
+.gauge{ flex:none; position:relative; height:30px; background:#fff; border:3px solid var(--ink); border-radius:999px; overflow:hidden; margin:8px 0 2px; }
+.gauge .zone{ position:absolute; top:0; bottom:0; background:var(--mint); border-inline:3px solid var(--ink); }
+.gauge .needle{ position:absolute; top:-2px; bottom:-2px; width:9px; border-radius:5px; background:var(--berry); border:2px solid var(--ink); margin-inline-start:-4px; inset-inline-start:0; }
+.gl{ flex:none; display:flex; justify-content:space-between; font-weight:700; font-size:.85rem; color:var(--muted); padding:0 6px; }
+.glow{ animation:glow 1.2s ease-in-out infinite alternate; }
+@keyframes glow{ from{ opacity:.55; } to{ opacity:1; } }
+.smoke circle{ animation:rise 1.4s ease-out infinite; transform-box:fill-box; transform-origin:center; }
+.smoke circle:nth-child(2){ animation-delay:.4s; } .smoke circle:nth-child(3){ animation-delay:.8s; }
+@keyframes rise{ 0%{ transform:translateY(8px) scale(.6); opacity:.9; } 100%{ transform:translateY(-26px) scale(1.5); opacity:0; } }
+
+/* decorate */
+.deco{ flex:1; min-height:0; display:grid; gap:12px; grid-template-columns:.85fr 1.15fr; grid-template-rows:minmax(0,1fr); align-items:stretch; }
+.deco > *{ min-height:0; min-width:0; }
+.cakeBox{ display:flex; background:#EAF6F0; border:3px solid var(--ink); border-radius:18px; padding:4px; cursor:crosshair; }
+.cakeSvg{ flex:1; width:100%; height:100%; min-height:0; display:block; touch-action:manipulation; }
+.ctls{ display:flex; flex-direction:column; gap:6px; overflow:hidden; }
+.ctl{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; }
+.ctl h4{ flex-basis:100%; font-size:1.05rem; }
+.stepper{ display:flex; align-items:center; gap:10px; }
+.stepper b{ font-family:'Fredoka','Lalezar',sans-serif; font-size:1.5rem; min-width:1.2em; text-align:center; }
+.drop{ animation:drop .5s cubic-bezier(.3,1.5,.5,1); }
+.pop{ animation:pop .35s cubic-bezier(.3,1.7,.5,1); transform-box:fill-box; transform-origin:50% 100%; }
+@keyframes drop{ from{ transform:translateY(-70px); opacity:0; } to{ transform:none; opacity:1; } }
+@keyframes pop{ from{ transform:scale(.3); opacity:0; } to{ transform:none; opacity:1; } }
+.port .deco{ grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; gap:6px; }
+.port .ctls{ flex-direction:row; flex-wrap:wrap; align-items:center; gap:4px 8px; }
+.port .ctl h4{ display:none; }
+.port .tctl{ flex-basis:100%; }
+.port .stepper{ gap:6px; } .port .stepper b{ font-size:1.2rem; }
+
+/* result */
+.resultGrid{ flex:1; min-height:0; display:grid; gap:14px; grid-template-columns:1fr 1fr; grid-template-rows:minmax(0,1fr); align-items:stretch; }
+.resultGrid > *{ min-height:0; min-width:0; }
+.resultGrid > div:last-child{ align-self:center; }
+.stars{ display:flex; gap:4px; justify-content:center; }
+.stars svg{ width:34px; height:34px; }
+.resTitle{ text-align:center; font-size:1.5rem; margin:4px 0; }
+.fixes{ list-style:none; padding:8px 12px; margin:6px 0; background:#FFF4CC; border:2.5px dashed var(--ink); border-radius:14px; display:grid; gap:2px; font-weight:700; font-size:.92rem; }
+.fixes h4{ font-size:1rem; }
+.pay{ display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin:6px 0; font-weight:800; }
+.port .resultGrid{ grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; gap:6px; }
+.port .stars svg{ width:28px; height:28px; }
+.port .resTitle{ font-size:1.15rem; margin:2px 0; }
+.port .fixes{ padding:5px 10px; font-size:.82rem; margin:4px 0; }
+.port .pay{ margin:4px 0; } .port .pay .chip{ font-size:.82rem; padding:0 8px; }
+
+/* home */
+.setbar{ flex:none; display:flex; margin-bottom:0; }
+.homeMain{ flex:1; min-height:0; display:grid; gap:14px 28px; grid-template-columns:1fr 1fr; grid-template-areas:"sign cake" "btns cake"; grid-template-rows:auto auto; align-content:center; align-items:center; }
+.homeSign{ grid-area:sign; display:flex; justify-content:center; }
+.homeBtns{ grid-area:btns; }
+.homeCake{ grid-area:cake; position:relative; height:430px; background:radial-gradient(circle at 50% 56%,#FFD9E5 0 54%,transparent 55%); }
+.homeCake .cakeSvg{ position:absolute; inset:0; }
+.pot{ position:absolute; bottom:8px; width:74px; } .pot svg{ width:100%; height:auto; display:block; }
+.pot.l{ inset-inline-start:0; } .pot.r{ inset-inline-end:0; }
+.sign{ position:relative; width:fit-content; max-width:100%; margin:26px 0 4px; padding:8px 36px 12px; background:#fff; border:3px solid var(--ink); border-radius:22px; box-shadow:5px 5px 0 var(--sh); text-align:center; }
+.sign::before,.sign::after{ content:""; position:absolute; top:-26px; width:4px; height:26px; background:var(--ink); }
+.sign::before{ inset-inline-start:22%; } .sign::after{ inset-inline-end:22%; }
+.logo{ font-size:4.2rem; color:var(--butter); line-height:1.05; margin:0;
+  text-shadow:-3px -3px 0 var(--ink),3px -3px 0 var(--ink),-3px 3px 0 var(--ink),3px 3px 0 var(--ink),0 6px 0 var(--ink),3px 6px 0 var(--ink),-3px 6px 0 var(--ink); }
+.tag{ font-size:1.15rem; font-weight:700; margin:2px 0 0; }
+.homeActions{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:8px; }
+.homeStats{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+.port .homeMain{ grid-template-columns:minmax(0,1fr); grid-template-areas:"sign" "cake" "btns"; grid-template-rows:auto minmax(0,1fr) auto; align-content:stretch; gap:6px; }
+.port .homeCake{ height:100%; }
+.port .sign{ padding:6px 26px 8px; margin-top:24px; } .port .logo{ font-size:3.2rem; } .port .tag{ font-size:1rem; }
+.port .pot{ width:56px; }
+
+/* intro / day end */
+.screenC{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
+.narrow{ width:100%; max-width:760px; max-height:100%; display:flex; flex-direction:column; gap:8px; overflow:hidden; }
+.narrow h2{ font-size:2rem; }
+.port .narrow h2{ font-size:1.6rem; }
+.newlist{ display:flex; flex-wrap:wrap; gap:6px; }
+.endStats{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; text-align:center; }
+.endStats > div{ background:#F3FAF6; border:3px solid var(--ink); border-radius:16px; padding:4px 6px; }
+.endStats .k{ display:block; color:var(--muted); font-weight:700; font-size:.85rem; }
+.endStats b{ font-family:'Fredoka','Lalezar',sans-serif; font-size:1.4rem; font-weight:400; display:inline-flex; align-items:center; gap:6px; }
+.endStats .stars svg{ width:22px; height:22px; }
+.narrow .actions{ margin:0; }
+.shop{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.shopItem{ display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; border:3px solid var(--ink); border-radius:14px; padding:4px 8px; background:#F3FAF6; min-width:0; }
+.shopItem.own{ background:#E3F6EC; }
+.sIcon{ width:34px; display:grid; place-items:center; }
+.sName{ min-width:0; line-height:1.15; } .sName b{ display:block; font-size:.9rem; } .sName small{ color:var(--muted); font-size:.75rem; }
+.shopItem .btn{ margin:0; display:inline-flex; align-items:center; gap:5px; }
+.port .shopItem{ padding:3px 6px; gap:5px; } .port .sIcon{ width:28px; } .port .sName b{ font-size:.8rem; } .port .shopItem .btn.sm{ padding:.15em .5em; font-size:.85rem; }
+
+/* dialogs + toast */
+.overlay{ position:fixed; inset:0; background:rgba(30,15,18,.55); display:grid; place-items:center; padding:16px; z-index:30; }
+.dlg{ max-width:420px; width:100%; text-align:center; }
+.dlg h3{ font-size:1.7rem; margin-bottom:6px; }
+.dlg .sub{ margin-bottom:0; }
+.dlg .actions{ margin-top:14px; }
+.setRow{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:2px dashed rgba(58,32,36,.25); font-weight:800; text-align:start; }
+.tog{ flex:none; width:58px; height:32px; border-radius:999px; border:3px solid var(--ink); background:#d9d4d4; position:relative; cursor:pointer; padding:0; }
+.tog i{ position:absolute; top:2px; inset-inline-start:2px; width:22px; height:22px; border-radius:50%; background:#fff; border:2.5px solid var(--ink); transition:inset-inline-start .15s; }
+.tog.on{ background:var(--mint); } .tog.on i{ inset-inline-start:calc(100% - 26px); }
+.toast{ position:fixed; inset-inline:0; margin:auto; width:max-content; max-width:90vw; bottom:calc(20px + env(safe-area-inset-bottom,0px)); background:var(--ink); color:#fff; padding:10px 18px; border-radius:14px; font-weight:700; z-index:40; opacity:0; transform:translateY(10px); transition:opacity .2s, transform .2s; pointer-events:none; }
+.toast.show{ opacity:1; transform:none; }
+@media (prefers-reduced-motion: reduce){ *,*::before,*::after{ animation:none !important; transition:none !important; } }
+.overlay .dlg{ max-height:calc(100vh - 20px); overflow:auto; }
+@media (max-height:520px){ .overlay .dlg{ padding:8px 14px; } .dlg h3{ font-size:1.3rem; margin-bottom:0; } .setRow{ padding:3px 0; } .volRow{ padding-bottom:0; } .volRow input{ height:18px; } .dlg .actions{ margin:4px 0 0; } .dlg .btn{ margin-bottom:0; } }
+.verdict.good{ color:#1F7A55; } .verdict.ok{ color:#8A6100; } .verdict.bad{ color:#B3214C; }
+.ctls .ctlActs{ flex:none; margin:0; justify-content:flex-start; gap:8px; }
+.ctls .tctl{ flex:1 1 auto; min-height:0; flex-wrap:nowrap; flex-direction:column; align-items:stretch; }
+.ctls .tctl .swrow{ overflow-y:auto; min-height:0; align-content:flex-start; }
+.port .ctls .tctl{ flex-direction:row; flex-wrap:wrap; align-items:center; }
+.volRow{ padding:0 0 8px; border-bottom:2px dashed rgba(58,32,36,.25); }
+.volRow input{ width:100%; height:26px; accent-color:var(--berry); }
+.setRow:has(+ .volRow){ border-bottom:0; padding-bottom:2px; }
+.ctls .ctlActs{ margin:2px 0 0; }
+.port .ctls .tctl{ flex-direction:column; flex-basis:100%; flex-wrap:nowrap; align-items:stretch; }
+.port .ctls .tctl .swrow{ max-height:100px; overflow-y:auto; }
+.port .ctls .ctlActs{ flex-basis:100%; }
+/* decorate palette: compact, tight under headings, never clipped */
+.ctls{ overflow:visible; gap:6px; }
+.ctls .ctl{ gap:3px; }
+.ctls .ctl h4{ margin:0; line-height:1.1; }
+.port .ctl h4{ display:block; font-size:.85rem; }
+.ctls .swrow{ margin:0; gap:5px; }
+.ctls .tctl{ flex:none; }
+.ctls .tctl .swrow, .port .ctls .tctl .swrow{ overflow:visible; max-height:none; }
+.ctls .sw{ flex-direction:row; padding:3px 8px 3px 6px; min-width:0; gap:5px; border-radius:12px; font-size:.82rem; }
+.ctls .sw .col{ width:18px; height:18px; border-width:2px; }
+.ctls .sw svg{ height:26px; width:auto; }
+.ctls .sw.sel{ transform:none; }
+.port .ctls .sw{ padding:3px 6px; }
+/* ticket: compact chips so every topping shows */
+.ticket{ display:flex; flex-wrap:wrap; gap:5px; padding:8px; }
+.trow{ display:contents; } .tl{ display:none; } .tops{ display:contents; }
+.ticket .chip{ font-size:.82rem; padding:0 8px; line-height:1.7; }
+.ctls .tctl h4{ flex:none; }
+.port .ctls .tctl{ flex-basis:100%; }
+.ctls .sw svg{ height:22px; }
+.ctls .sw{ padding:2px 8px 2px 6px; }
+.port .ctls .sw{ padding:2px 6px; }
+.ctls .ctl:first-child{ flex-wrap:nowrap; align-items:center; gap:10px; }
+.ctls .ctl:first-child h4{ flex:none; }
+.port .decoSub{ display:none; }
+.port .ticket{ gap:4px; padding:6px 8px; }
+.port .ticket .chip{ font-size:.74rem; line-height:1.5; padding:0 6px; }
+.port .ctls .ctl:first-child{ flex:1 1 100%; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- helpers ---------- */
+var INK = '#3A2024';
+function $(s, r){ return (r || document).querySelector(s); }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+function rnd(a){ return a[Math.floor(Math.random() * a.length)]; }
+function shuffle(a){ a = a.slice(); for (var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function hex2rgb(h){ h = h.replace('#', ''); return [0, 2, 4].map(function(i){ return parseInt(h.substr(i, 2), 16); }); }
+function rgb2hex(a){ return '#' + a.map(function(v){ return v.toString(16).padStart(2, '0'); }).join(''); }
+function mix(a, b, t){ t = clamp(t, 0, 1); var x = hex2rgb(a), y = hex2rgb(b); return rgb2hex(x.map(function(v, i){ return Math.round(v + (y[i] - v) * t); })); }
+var toastTimer = 0;
+function toast(msg){
+  var t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+}
+
+/* ---------- language ---------- */
+var LANG = 'en';
+try { var sl = localStorage.getItem('cakeria-lang'); if (sl === 'ar' || sl === 'en') LANG = sl; } catch(e){}
+var AR_EN = [["محلّك الخاص للكيك: خذ الطلب، اخبز، زيّن، وقدّم.", "Run your own cake shop: bake, decorate, serve!"], ["اقرأ التذكرة، اسكب العجين لين الخط، أخرج الكيكة من الفرن وهي ذهبية، ثم رتّب الطبقات والكريمة والزينة بنفس الطلب بالضبط.", "Read the order, pour the batter up to the line, take the cake out when it is golden, then decorate it exactly like the order."], ["اختر النكهة، ثم اضغط باستمرار على الزر واسكب لين توصل الخط.", "Pick a flavor, then hold the button to pour until the batter reaches the line."], ["رتّب الطبقات، اختر الكريمة، ثم اضغط فوق الكيكة لتضع الزينة.", "Set the layers, pick a frosting, then tap the cake to add toppings."], ["الطلب كله مكتوب على التذكرة، ترجع له في أي وقت.", "Your order is on the ticket. Check it any time."], ["اضغط «أخرج الكيك» لما المؤشر يدخل المنطقة الخضراء.", "Press \"Take it out\" when the marker is in the green zone."], ["الزبائن يصبرون أكثر فتزيد الإكراميات.", "Customers wait longer, so tips grow."], ["يبطّئ السكب فيسهل ضبط الكمية.", "Pours slower, so it is easier to stop in time."], ["يوسّع منطقة الخبز المثالية.", "Makes the perfect baking zone wider."], ["فاض العجين! اضغط إعادة وحاول مرة ثانية.", "Too much! Press Try again."], ["تحفة! الزبون طار من الفرحة", "Wow! Your customer loves it!"], ["مقبولة، بس تقدر تتحسن", "Not bad, you can do better"], ["حلوة، الزبون راضي", "Nice, the customer is happy"], ["مو هذا اللي طلبته", "That is not what I ordered"], ["طلعتها بدري، الكيكة نيّة.", "Too early, the cake is raw."], ["خبز مثالي، لونها ذهبي!", "Perfect! Nice and golden."], ["لازم طبقة وحدة على الأقل", "You need at least 1 layer"], ["راجع الزينة على التذكرة", "Check the toppings on the ticket"], ["الكيكة طلعت نيّة", "The cake was raw"], ["الكيكة احترقت شوي", "The cake was a bit burnt"], ["احترقت شوي.", "A bit burnt."], ["قريب، ناقص شوي.", "Close, a little too low."], ["قريب، زايد شوي.", "Close, a little too high."], ["العجين قليل.", "Not enough batter."], ["العجين كثير.", "Too much batter."], ["سكبة مثالية!", "Perfect pour!"], ["أقصى شي 4 طبقات", "Max 4 layers"], ["اختر الكريمة أول", "Pick a frosting first"], ["اختر النكهة أول", "Pick a flavor first"], ["اختر زينة أول", "Pick a topping first"], ["اضغط فوق الكيكة", "Tap on top of the cake"], ["الكيكة امتلأت", "The cake is full"], ["اقرأ تذكرة الزبون", "Read the order"], ["اسكب العجين", "Pour the batter"], ["اخبزه بدقة", "Bake it golden"], ["زيّن وقدّم", "Decorate & serve"], ["زيّن الكيكة", "Decorate the cake"], ["قدّم الكيكة", "Serve the cake"], ["حضّر العجين", "Make the batter"], [" زبائن بانتظارك اليوم.", " customers are waiting today."], ["كمّل من اليوم ", "Continue from day "], ["أفضل يوم عندك: ", "Best day: "], [" عملة", " coins"], ["انتهى اليوم ", "Finished day "], ["ابدأ اليوم ", "Start day "], ["ربح اليوم", "Earned today"], ["اليوم ", "Day "], ["متوسط التقييم", "Average rating"], ["رصيدك", "Your coins"], ["تطوير المحل", "Shop upgrades"], ["المستوى ", "Level "], ["مكتمل", "Maxed"], ["غداً يوصل: ", "Coming tomorrow: "], ["جديد في المحل", "New in the shop"], ["افتح المحل", "Open the shop"], ["مراحل الطلب", "Order steps"], ["صبر الزبون", "Customer patience"], ["الزبون التالي", "Next customer"], ["إنهاء اليوم", "Finish the day"], ["الزبون ", "Customer "], ["الزبون", "Customer"], [" من 5", " out of 5"], [" من ", " of "], ["زبون جديد", "New customer"], ["ابدأ التحضير", "Start"], ["ابدأ لعبة جديدة", "New game"], ["كرمبلز", "Crumbles"], ["قالب الكيك", "Cake pan"], ["الكيكة", "Cake"], ["أخرج الكيك", "Take it out"], ["اضغط واسكب", "Hold to pour"], ["إلى التزيين", "To decorating"], ["إلى الفرن", "To the oven"], ["إعادة", "Try again"], ["تراجع", "Undo"], ["مسح الزينة", "Clear toppings"], ["إنقاص طبقة", "Remove layer"], ["إضافة طبقة", "Add layer"], ["الهدف", "Goal"], ["نيّة", "Raw"], ["محروقة", "Burnt"], ["فرن ذكي", "Smart oven"], ["إبريق دقيق", "Slow pitcher"], ["كراسي مريحة", "Cozy chairs"], ["الطلب", "Order"], ["العجين", "Batter"], ["الفرن", "Oven"], ["التزيين", "Decorate"], ["التقديم", "Serve"], ["سكب العجين", "Pouring"], ["الخبز", "Baking"], ["النكهة", "Flavor"], ["الطبقات", "Layers"], ["الكريمة", "Frosting"], ["الزينة", "Toppings"], ["المطلوب ", "Ordered: "], ["للتحسين", "To do better"], ["السعر ", "Price "], ["إكرامية ", "Tip "], ["المجموع ", "Total "], ["اللغة", "Language"], ["الإعدادات", "Settings"], ["، ", ", "], ["فانيلا", "Vanilla"], ["قطع شوكولاتة", "Choc chips"], ["شوكولاتة", "Chocolate"], ["ريد فيلفت", "Red velvet"], ["فستق", "Pistachio"], ["بيضاء", "White"], ["فراولة", "Strawberry"], ["توت أزرق", "Blueberry"], ["توت", "Berry"], ["كرز", "Cherry"], ["سكاكر ملونة", "Sprinkles"], ["شمعة", "Candle"], ["ماكارون", "Macaron"], ["عجينة ", "Batter "], ["كريمة ", "Frosting "]];
+AR_EN.sort(function(a, b){ return b[0].length - a[0].length; });
+function t(str){
+  if (LANG === 'ar') return str;
+  for (var i = 0; i < AR_EN.length; i++) str = str.split(AR_EN[i][0]).join(AR_EN[i][1]);
+  return str;
+}
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  document.title = LANG === 'ar' ? 'كرمبلز - لعبة محل الكيك' : 'Crumbles - Cake Shop Game';
+}
+var GEAR = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="'+INK+'" stroke-width="2.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3" stroke="'+INK+'" stroke-width="2.5" stroke-linecap="round"/></svg>';
+var AUD = { ctx:null, sfxG:null, musG:null, sfx:true, music:true, sfxVol:50, musVol:50, timer:0, next:0, step:0, pour:null };
+try { var sa = JSON.parse(localStorage.getItem('cakeria-audio') || 'null'); if (sa){ AUD.sfx = sa.sfx !== false; AUD.music = sa.music !== false; if (typeof sa.sfxVol === 'number') AUD.sfxVol = sa.sfxVol; if (typeof sa.musVol === 'number') AUD.musVol = sa.musVol; } } catch(e){}
+function saveAudio(){ try { localStorage.setItem('cakeria-audio', JSON.stringify({ sfx:AUD.sfx, music:AUD.music, sfxVol:AUD.sfxVol, musVol:AUD.musVol })); } catch(e){} }
+function ensureAudio(){
+  if (!AUD.ctx){
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+      AUD.ctx = new AC();
+      AUD.sfxG = AUD.ctx.createGain(); AUD.sfxG.gain.value = .35 * AUD.sfxVol / 50; AUD.sfxG.connect(AUD.ctx.destination);
+      AUD.musG = AUD.ctx.createGain(); AUD.musG.gain.value = .22 * AUD.musVol / 50; AUD.musG.connect(AUD.ctx.destination);
+    } catch(e){ AUD.ctx = null; return false; }
+  }
+  if (AUD.ctx.state === 'suspended') AUD.ctx.resume();
+  return true;
+}
+function tone(f, dur, type, vol, when, to, dest){
+  var c = AUD.ctx, t0 = c.currentTime + (when || 0);
+  var o = c.createOscillator(), g = c.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t0);
+  if (to) o.frequency.exponentialRampToValueAtTime(to, t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol || .2, t0 + .012); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(dest || AUD.sfxG); o.start(t0); o.stop(t0 + dur + .03);
+}
+function sfx(n){
+  if (!AUD.sfx || !ensureAudio()) return;
+  switch (n){
+    case 'click': tone(620, .06, 'triangle', .12, 0, 900); break;
+    case 'pop': tone(380, .1, 'sine', .22, 0, 820); break;
+    case 'drop': tone(220, .16, 'sine', .3, 0, 80); break;
+    case 'arrive': tone(1319, .5, 'sine', .15); tone(1760, .6, 'sine', .12, .12); break;
+    case 'ding': tone(1046, .6, 'sine', .22); tone(1568, .8, 'sine', .16, .1); break;
+    case 'good': [523, 659, 784, 1046].forEach(function(f, i){ tone(f, .28, 'triangle', .2, i * .09); }); break;
+    case 'ok': tone(523, .2, 'triangle', .2); tone(659, .3, 'triangle', .2, .12); break;
+    case 'bad': tone(300, .3, 'sine', .14, 0, 180); tone(240, .35, 'sine', .12, .18, 150); break;
+    case 'coin': tone(988, .09, 'sine', .12); tone(1319, .25, 'sine', .12, .08); break;
+  }
+}
+function startPourSound(){
+  if (!AUD.sfx || !ensureAudio() || AUD.pour) return;
+  var c = AUD.ctx, len = c.sampleRate, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+  for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  var src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+  var f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 500; f.Q.value = .8;
+  var g = c.createGain(); g.gain.setValueAtTime(.0001, c.currentTime); g.gain.linearRampToValueAtTime(.12, c.currentTime + .15);
+  src.connect(f); f.connect(g); g.connect(AUD.sfxG); src.start();
+  AUD.pour = { src:src, g:g };
+}
+function stopPourSound(){
+  if (!AUD.pour) return;
+  var p = AUD.pour, c = AUD.ctx; AUD.pour = null;
+  p.g.gain.cancelScheduledValues(c.currentTime); p.g.gain.setValueAtTime(Math.max(.0001, p.g.gain.value), c.currentTime); p.g.gain.linearRampToValueAtTime(.0001, c.currentTime + .1);
+  try { p.src.stop(c.currentTime + .12); } catch(e){}
+}
+var CHORDS = [[60,64,67],[57,60,64],[53,57,60],[55,59,62]];
+function mf(m){ return 440 * Math.pow(2, (m - 69) / 12); }
+function schedule(){
+  var c = AUD.ctx; if (!c) return;
+  var SD = 60 / 112 / 2, pat = [0,1,2,1,2,1,0,1];
+  while (AUD.next < c.currentTime + .4){
+    var s = AUD.step % 32, ch = CHORDS[Math.floor(s / 8)], k = s % 8, w0 = Math.max(0, AUD.next - c.currentTime);
+    tone(mf(ch[pat[k]] + 12), .24, 'triangle', .5, w0, null, AUD.musG);
+    if (k === 0 || k === 4) tone(mf(ch[0] - 12), .5, 'sine', .9, w0, null, AUD.musG);
+    if (k === 6) tone(mf(ch[2] + 24), .3, 'sine', .22, w0, null, AUD.musG);
+    AUD.next += SD; AUD.step++;
+  }
+}
+function startMusic(){ if (!AUD.music || AUD.timer || !ensureAudio()) return; AUD.next = AUD.ctx.currentTime + .1; AUD.step = 0; AUD.timer = setInterval(schedule, 120); schedule(); }
+function stopMusic(){ clearInterval(AUD.timer); AUD.timer = 0; }
+function setMusic(on){ AUD.music = on; saveAudio(); if (on) startMusic(); else stopMusic(); }
+document.addEventListener('pointerdown', function(){ ensureAudio(); startMusic(); }, { once:true });
+document.addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('.btn,.sw,.tog'); if (b && !b.classList.contains('hold')) sfx('click'); });
+document.addEventListener('visibilitychange', function(){ if (!AUD.ctx) return; if (document.hidden) AUD.ctx.suspend(); else AUD.ctx.resume(); });
+
+function applyVol(){ if (AUD.ctx){ AUD.sfxG.gain.value = .35 * AUD.sfxVol / 50; AUD.musG.gain.value = .22 * AUD.musVol / 50; } }
+function volHTML(id, v, label){ return '<div class="volRow"><input type="range" min="0" max="100" step="5" value="' + v + '" id="' + id + '" aria-label="' + label + ' ' + tr('volume','مستوى الصوت') + '"></div>'; }
+function toggleHTML(id, label, on){
+  return '<div class="setRow"><span>' + label + '</span><button class="tog' + (on ? ' on' : '') + '" id="' + id + '" role="switch" aria-checked="' + on + '" aria-label="' + label + '"><i></i></button></div>';
+}
+function openSettings(showLang){
+  var ov = document.createElement('div'); ov.className = 'overlay';
+  ov.innerHTML = '<div class="card dlg" role="dialog" aria-modal="true" aria-labelledby="stT"><h3 id="stT">' + tr('Settings','الإعدادات') + '</h3>' +
+    (showLang ? '<div class="setRow"><span>' + tr('Language','اللغة') + '</span><span class="swrow" style="margin:0"><button class="sw' + (LANG === 'en' ? ' sel' : '') + '" data-l="en">English</button><button class="sw' + (LANG === 'ar' ? ' sel' : '') + '" data-l="ar">العربية</button></span></div>' : '') +
+    toggleHTML('tgSfx', tr('Sound effects','المؤثرات الصوتية'), AUD.sfx) + volHTML('vlSfx', AUD.sfxVol, tr('Sound effects','المؤثرات الصوتية')) + toggleHTML('tgMus', tr('Music','الموسيقى'), AUD.music) + volHTML('vlMus', AUD.musVol, tr('Music','الموسيقى')) +
+    '<div class="actions"><button class="btn" id="stClose">' + tr('Done','تم') + '</button></div></div>';
+  document.body.appendChild(ov);
+  function close(){ ov.remove(); document.removeEventListener('keydown', esc); }
+  function esc(e){ if (e.key === 'Escape') close(); }
+  document.addEventListener('keydown', esc);
+  function flip(id, on){ var b = ov.querySelector(id); b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); }
+  ov.querySelector('#tgSfx').onclick = function(){ AUD.sfx = !AUD.sfx; saveAudio(); flip('#tgSfx', AUD.sfx); };
+  ov.querySelector('#tgMus').onclick = function(){ setMusic(!AUD.music); flip('#tgMus', AUD.music); };
+  var vs = ov.querySelector('#vlSfx'), vm = ov.querySelector('#vlMus');
+  vs.oninput = function(){ AUD.sfxVol = +vs.value; applyVol(); saveAudio(); };
+  vs.onchange = function(){ sfx('pop'); };
+  vm.oninput = function(){ AUD.musVol = +vm.value; applyVol(); saveAudio(); };
+  ov.querySelector('#stClose').onclick = close;
+  Array.prototype.forEach.call(ov.querySelectorAll('[data-l]'), function(x){
+    x.onclick = function(){ LANG = x.dataset.l; try { localStorage.setItem('cakeria-lang', LANG); } catch(e){} applyLang(); close(); render(); };
+  });
+  ov.querySelector('#stClose').focus();
+}
+function tr(en, ar){ return LANG === 'en' ? en : ar; }
+var HOME_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z" fill="#fff" stroke="'+INK+'" stroke-width="2.2" stroke-linejoin="round"/></svg>';
+function confirmDialog(title, body, noLabel, yesLabel, onYes){
+  var ov = document.createElement('div'); ov.className = 'overlay';
+  ov.innerHTML = '<div class="card dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgT"><h3 id="dlgT">' + title + '</h3><p class="sub">' + body + '</p><div class="actions"><button class="btn alt" id="dNo">' + noLabel + '</button><button class="btn" id="dYes">' + yesLabel + '</button></div></div>';
+  document.body.appendChild(ov);
+  function close(){ ov.remove(); document.removeEventListener('keydown', esc); }
+  function esc(e){ if (e.key === 'Escape') close(); }
+  document.addEventListener('keydown', esc);
+  ov.querySelector('#dNo').onclick = close;
+  ov.querySelector('#dYes').onclick = function(){ close(); onYes(); };
+  ov.querySelector('#dNo').focus();
+}
+function goHome(){ G.best = Math.max(G.best, G.dayEarned || 0); save(); G.screen = 'title'; render(); }
+/* ---------- data ---------- */
+var FLAVORS = {
+  vanilla:   { get name(){ return t('فانيلا'); },    color:'#F3CF7E', unlock:1 },
+  chocolate: { get name(){ return t('شوكولاتة'); },  color:'#6E3B2C', unlock:1 },
+  velvet:    { get name(){ return t('ريد فيلفت'); }, color:'#C2304A', unlock:2 },
+  pistachio: { get name(){ return t('فستق'); },      color:'#A8CB72', unlock:4 }
+};
+var FROSTINGS = {
+  cream:      { get name(){ return t('بيضاء'); },     color:'#FFF3E6', unlock:1 },
+  strawberry: { get name(){ return t('فراولة'); },    color:'#F8A4BC', unlock:1 },
+  chocolate:  { get name(){ return t('شوكولاتة'); },  color:'#7C4A37', unlock:2 },
+  pistachio:  { get name(){ return t('فستق'); },      color:'#BCE0A0', unlock:3 },
+  berry:      { get name(){ return t('توت'); },       color:'#AEA9F2', unlock:5 }
+};
+var TOPPINGS = {
+  cherry:     { get name(){ return t('كرز'); },            unlock:1 },
+  strawberry: { get name(){ return t('فراولة'); },         unlock:1 },
+  sprinkles:  { get name(){ return t('سكاكر ملونة'); },    unlock:1 },
+  blueberry:  { get name(){ return t('توت أزرق'); },       unlock:2 },
+  candle:     { get name(){ return t('شمعة'); },           unlock:3 },
+  chips:      { get name(){ return t('قطع شوكولاتة'); },   unlock:4 },
+  macaron:    { get name(){ return t('ماكارون'); },        unlock:5 },
+  heart: { get name(){ return tr('Heart candy','حلاوة قلب'); }, unlock:99, shop:true },
+  star: { get name(){ return tr('Star candy','حلاوة نجمة'); }, unlock:99, shop:true },
+  cookie: { get name(){ return tr('Cookie','كوكيز'); }, unlock:99, shop:true },
+  flower: { get name(){ return tr('Sugar flower','وردة سكر'); }, unlock:99, shop:true }
+};
+var GIRLS_E = [['Mia','ميا'],['Zoe','زوي'],['Ava','آفا'],['Ivy','آيفي'],['Lily','ليلي'],['Ella','إيلا'],['Nora','نورا']];
+var GIRLS_A = [['Mariam','مريم'],['Fatima','فاطمة'],['Noof','نوف'],['Zainab','زينب'],['Dana','دانة'],['Lulwa','لولوة'],['Reema','ريما'],['Sara','سارة'],['Hind','هند']];
+var BOYS_E = [['Leo','ليو'],['Sam','سام'],['Max','ماكس'],['Noah','نوح'],['Ben','بن'],['Jack','جاك'],['Adam','آدم']];
+var BOYS_A = [['Omar','عمر'],['Ali','علي'],['Hamad','حمد'],['Salman','سلمان'],['Issa','عيسى'],['Rashed','راشد'],['Yaser','ياسر'],['Mubarak','مبارك'],['Khalid','خالد']];
+var SKINS = ['#FFE0CC','#F8CBA6','#E9AF86','#CC9168','#A8714F'];
+var HAIRS = ['#5B3A2E','#7A4A32','#E0A458','#3E3A55','#F28B82'];
+var SHIRTS = ['#FF8FB1','#8FA8FF','#FFC46B','#7FD6B3','#C5A1F0','#7CCBEF'];
+var SHOP = [
+  { k:'heart',   kind:'top',   price:40,  name:['Heart candy','حلاوة قلب'] },
+  { k:'star',    kind:'top',   price:60,  name:['Star candy','حلاوة نجمة'] },
+  { k:'cookie',  kind:'top',   price:90,  name:['Cookie','كوكيز'] },
+  { k:'flower',  kind:'top',   price:120, name:['Sugar flower','وردة سكر'] }
+];
+function pick(pair){ return LANG === 'en' ? pair[0] : pair[1]; }
+function owns(k){ return G.owned.indexOf(k) >= 0; }
+var STAGES = [['order','الطلب'],['pour','العجين'],['bake','الفرن'],['decorate','التزيين'],['result','التقديم']];
+
+function unlocked(obj, day){ return Object.keys(obj).filter(function(k){ var o = obj[k]; return o.unlock <= day || (o.shop && owns(k)); }); }
+function layersText(n){ if (LANG === 'en') return n + (n === 1 ? ' layer' : ' layers'); return n === 1 ? 'طبقة واحدة' : n === 2 ? 'طبقتين' : n + ' طبقات'; }
+function sumVals(o){ return Object.keys(o).reduce(function(a, k){ return a + o[k]; }, 0); }
+
+var COIN = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="#FFD966" stroke="'+INK+'" stroke-width="2.4"/><path d="M12 6.5v11M9 10c0-1.7 6-1.7 6 0s-6 2.4-6 4.2 6 1.7 6 0" fill="none" stroke="'+INK+'" stroke-width="1.8" stroke-linecap="round"/></svg>';
+
+/* ---------- state + save ---------- */
+var SAVE_KEY = 'cakeria-save-v1';
+var G = {
+  screen:'title', day:1, money:0, best:0, owned:[],
+  queue:[], idx:0, order:null, stage:'order', w:null, t0:0, dayEarned:0, dayScores:[],
+  stats:null, res:null, raf:0, patIv:0, mood:'ok', speed:0
+};
+function save(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify({ day:G.day, money:G.money, best:G.best, owned:G.owned })); } catch(e){} }
+function load(){ try { var r = localStorage.getItem(SAVE_KEY); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
+
+/* ---------- graphics ---------- */
+function toppingShape(t){
+  switch(t){
+    case 'cherry':
+      return '<path d="M1,-2 C3,-12 8,-16 13,-17" fill="none" stroke="#2F7A3A" stroke-width="2.4" stroke-linecap="round"/><circle cx="0" cy="3" r="9" fill="#D81E45" stroke="'+INK+'" stroke-width="2.2"/><circle cx="-3" cy="0" r="2.4" fill="#fff" opacity=".6"/>';
+    case 'strawberry':
+      return '<path d="M-10,-7 Q0,-14 10,-7 Q9,6 0,13 Q-9,6 -10,-7Z" fill="#EE3D55" stroke="'+INK+'" stroke-width="2.2" stroke-linejoin="round"/><path d="M-6,-9 L-3,-15 L0,-10 L3,-15 L6,-9 Z" fill="#4CAA52" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"/><g fill="#FFE9A8"><circle cx="-4" cy="-1" r="1.1"/><circle cx="3" cy="-2" r="1.1"/><circle cx="0" cy="4" r="1.1"/><circle cx="-2" cy="8" r="1"/><circle cx="4" cy="3" r="1"/></g>';
+    case 'blueberry':
+      return '<circle r="8" cy="2" fill="#4F57D6" stroke="'+INK+'" stroke-width="2.2"/><circle r="2.6" cy="-1" fill="#2B3190"/><circle cx="-3.5" cy="0.5" r="1.6" fill="#fff" opacity=".5"/>';
+    case 'sprinkles': {
+      var cols = ['#FF5C8A','#FFD23F','#3EC7B0','#6C74F5','#FF9A3D','#fff'];
+      var pos = [[-10,-2,30],[-4,-9,-40],[6,-5,70],[11,4,10],[1,4,-60],[-8,7,50]];
+      return pos.map(function(p, i){ return '<rect x="-4.5" y="-1.6" width="9" height="3.2" rx="1.6" fill="'+cols[i]+'" stroke="'+INK+'" stroke-width="1" transform="translate('+p[0]+','+p[1]+') rotate('+p[2]+')"/>'; }).join('');
+    }
+    case 'chips':
+      return '<path d="M-9,8 L-1,-10 L9,8Z" fill="#5A3326" stroke="'+INK+'" stroke-width="2.2" stroke-linejoin="round"/><path d="M-2,-2 L0,-6" stroke="#9C6A55" stroke-width="2" stroke-linecap="round"/>';
+    case 'candle':
+      return '<rect x="-3.5" y="-10" width="7" height="22" rx="2" fill="#7FC8F8" stroke="'+INK+'" stroke-width="2.2"/><path d="M-3.5,-3 L3.5,-6 M-3.5,3 L3.5,0 M-3.5,9 L3.5,6" stroke="#fff" stroke-width="2" opacity=".85"/><path d="M0,-12 C-6,-18 0,-22 0,-27 C5,-22 6,-17 0,-12Z" fill="#FFB02E" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"/><path d="M0,-14 C-2,-17 0,-19 0,-21 C2,-19 2.5,-16 0,-14Z" fill="#FFE27A"/>';
+    case 'macaron':
+      return '<ellipse cx="0" cy="-4" rx="11" ry="5.5" fill="#F29BC0" stroke="'+INK+'" stroke-width="2.2"/><rect x="-9" y="-2" width="18" height="4.5" fill="#FFF4E8" stroke="'+INK+'" stroke-width="1.6"/><ellipse cx="0" cy="5" rx="11" ry="5.5" fill="#F29BC0" stroke="'+INK+'" stroke-width="2.2"/>';
+    case 'heart':
+      return '<path d="M0,10 C-14,0 -10,-12 0,-5 C10,-12 14,0 0,10Z" fill="#FF6FA0" stroke="'+INK+'" stroke-width="2.2" stroke-linejoin="round"/><circle cx="-4.5" cy="-3" r="1.8" fill="#fff" opacity=".65"/>';
+    case 'star':
+      return '<path d="M0,-11 L3.2,-3.8 L11,-3.4 L5,1.6 L7,9.4 L0,5 L-7,9.4 L-5,1.6 L-11,-3.4 L-3.2,-3.8Z" fill="#FFD23F" stroke="'+INK+'" stroke-width="2.2" stroke-linejoin="round"/>';
+    case 'cookie':
+      return '<circle r="10" cy="1" fill="#D9A066" stroke="'+INK+'" stroke-width="2.2"/><g fill="#5A3326"><circle cx="-4" cy="-2" r="2"/><circle cx="3" cy="-4" r="1.8"/><circle cx="4.5" cy="4" r="2"/><circle cx="-3" cy="5.5" r="1.7"/></g>';
+    case 'flower':
+      return '<g fill="#FFB3D1" stroke="'+INK+'" stroke-width="1.6"><circle cx="0" cy="-6.5" r="4.6"/><circle cx="6.2" cy="-2" r="4.6"/><circle cx="3.8" cy="5.3" r="4.6"/><circle cx="-3.8" cy="5.3" r="4.6"/><circle cx="-6.2" cy="-2" r="4.6"/></g><circle r="3.2" fill="#FFD23F" stroke="'+INK+'" stroke-width="1.6"/>';
+  }
+  return '';
+}
+function toppingIcon(t, size){
+  size = size || 28;
+  return '<svg viewBox="-16 -28 32 42" width="'+size+'" height="'+(size * 42 / 32)+'" aria-hidden="true">'+toppingShape(t)+'</svg>';
+}
+function layerIcon(n){
+  var s = '<svg viewBox="0 0 34 30" width="34" height="30" aria-hidden="true">';
+  for (var i = 0; i < n; i++){ s += '<rect x="4" y="'+(22 - i * 8)+'" width="26" height="8" rx="3" fill="#F3CF7E" stroke="'+INK+'" stroke-width="2"/>'; }
+  return s + '</svg>';
+}
+function starSVG(on){
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.7L12 17.4 6 20.9l1.3-6.7-5-4.7 6.8-.8z" fill="'+(on ? '#FFD966' : '#fff')+'" stroke="'+INK+'" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+}
+function starsHTML(n){ var s = ''; n = Math.round(n); for (var i = 1; i <= 5; i++) s += starSVG(i <= n); return '<div class="stars" role="img" aria-label="'+n+t(' من 5">')+s+'</div>'; }
+
+function customerSVG(f, mood){
+  mood = mood || 'ok';
+  var ink = INK, sw = 'stroke="' + ink + '" stroke-width="3" stroke-linejoin="round"';
+  var eyeL = '<ellipse cx="46" cy="67" rx="6.5" ry="8.5" fill="'+ink+'"/><circle cx="44" cy="63.5" r="2.6" fill="#fff"/><circle cx="48" cy="70" r="1.3" fill="#fff"/>';
+  var eyeR = '<ellipse cx="74" cy="67" rx="6.5" ry="8.5" fill="'+ink+'"/><circle cx="72" cy="63.5" r="2.6" fill="#fff"/><circle cx="76" cy="70" r="1.3" fill="#fff"/>';
+  var eyes = eyeL + eyeR, mouth, extra = '';
+  if (mood === 'happy'){
+    eyes = '<path d="M39 69 Q46 59 53 69 M67 69 Q74 59 81 69" fill="none" stroke="'+ink+'" stroke-width="3.5" stroke-linecap="round"/>';
+    mouth = '<path d="M52 78 Q60 92 68 78 Z" fill="#E0556B" stroke="'+ink+'" stroke-width="2.5" stroke-linejoin="round"/>';
+  } else if (mood === 'sad'){
+    mouth = '<path d="M53 86 Q60 78 67 86" fill="none" stroke="'+ink+'" stroke-width="3" stroke-linecap="round"/>';
+    extra = '<path d="M38 53 L53 57 M82 53 L67 57" fill="none" stroke="'+ink+'" stroke-width="2.8" stroke-linecap="round"/><path d="M92 56 q5 8 0 11 q-5 -3 0 -11z" fill="#8FD3FF" stroke="'+ink+'" stroke-width="1.8"/>';
+  } else if (mood === 'neutral'){
+    mouth = '<path d="M54 82 H66" fill="none" stroke="'+ink+'" stroke-width="3" stroke-linecap="round"/>';
+  } else {
+    mouth = '<path d="M53 79 Q60 87 67 79" fill="none" stroke="'+ink+'" stroke-width="3" stroke-linecap="round"/>';
+  }
+  var st = f.style, back = '', front = '', headR = 36;
+  var cap = '<path d="M24 62 Q20 20 60 20 Q100 20 96 62 Q88 40 60 40 Q32 40 24 62Z" fill="'+f.hair+'" '+sw+'/>';
+  if (st === 'pigtails'){ back = '<circle cx="17" cy="80" r="12" fill="'+f.hair+'" '+sw+'/><circle cx="103" cy="80" r="12" fill="'+f.hair+'" '+sw+'/>'; front = cap; }
+  else if (st === 'bun'){ back = '<circle cx="60" cy="19" r="13" fill="'+f.hair+'" '+sw+'/>'; front = cap; }
+  else if (st === 'beanie'){ front = '<path d="M23 58 Q22 16 60 16 Q98 16 97 58Z" fill="'+f.shirt+'" '+sw+'/><rect x="20" y="50" width="80" height="12" rx="6" fill="#fff" '+sw+'/><circle cx="60" cy="12" r="8" fill="#fff" '+sw+'/>'; }
+  else if (st === 'scarf'){ back = '<path d="M18 68 Q14 12 60 12 Q106 12 102 68 Q104 104 84 112 L36 112 Q16 104 18 68Z" fill="'+f.scarf+'" '+sw+'/>'; headR = 31; }
+  else front = cap;
+  return '<svg viewBox="0 0 120 130" class="custSvg" role="img" aria-label="'+t(t('الزبون'))+'">' +
+    '<path d="M26 130 Q26 108 60 108 Q94 108 94 130Z" fill="'+f.shirt+'" '+sw+'/>' + back +
+    '<circle cx="60" cy="64" r="'+headR+'" fill="'+f.skin+'" '+sw+'/>' + front + eyes +
+    '<ellipse cx="37" cy="79" rx="6" ry="4" fill="#FF8FA8" opacity=".6"/><ellipse cx="83" cy="79" rx="6" ry="4" fill="#FF8FA8" opacity=".6"/>' +
+    extra + mouth + '</svg>';
+}
+
+/* cake drawing */
+var CX = 200, RX = 110, RY = 22, LH = 42, BASE = 298;
+function shadeColor(hex, p){
+  if (p == null) return hex;
+  var raw = mix(hex, '#ffffff', .45), dark = mix(hex, '#1a0d08', .6);
+  if (p < .62) return mix(raw, hex, p / .62);
+  return mix(hex, dark, (p - .62) / .38);
+}
+function dripPath(top){
+  var xs = []; for (var x = CX - RX; x <= CX + RX; x += 4) xs.push(x);
+  function ey(x){ return RY * Math.sqrt(Math.max(0, 1 - Math.pow((x - CX) / RX, 2))); }
+  function d(x){ return 8 + 20 * Math.pow(Math.max(0, Math.sin((x - (CX - RX)) / 9)), 3); }
+  var up = xs.map(function(x){ return x + ',' + (top + ey(x)).toFixed(1); });
+  var dn = xs.slice().reverse().map(function(x){ return x + ',' + (top + ey(x) + d(x)).toFixed(1); });
+  return 'M' + up.join(' L') + ' L' + dn.join(' L') + ' Z';
+}
+function cakeSVG(o){
+  var layers = o.layers || 0, toppings = o.toppings || [];
+  var sc = o.flavor ? shadeColor(FLAVORS[o.flavor].color, o.shade) : '#F3CF7E';
+  var fc = o.frosting ? FROSTINGS[o.frosting].color : null;
+  var crumb = mix(sc, '#000000', .25);
+  var s = t('<svg class="cakeSvg" viewBox="0 0 400 340" role="img" aria-label="الكيكة">');
+  s += '<ellipse cx="200" cy="304" rx="175" ry="30" fill="#fff" stroke="'+INK+'" stroke-width="3"/>';
+  s += '<ellipse cx="200" cy="300" rx="140" ry="24" fill="#E4F3EC" stroke="'+INK+'" stroke-width="2"/>';
+  for (var i = 0; i < layers; i++){
+    var bot = BASE - i * LH, top = bot - LH;
+    var isLast = (i === layers - 1);
+    s += '<g' + (o.animLayer && isLast ? ' class="drop"' : '') + '>';
+    s += '<path d="M'+(CX-RX)+','+top+' L'+(CX-RX)+','+bot+' A'+RX+','+RY+' 0 0 0 '+(CX+RX)+','+bot+' L'+(CX+RX)+','+top+' Z" fill="'+sc+'" stroke="'+INK+'" stroke-width="3" stroke-linejoin="round"/>';
+    for (var k = 0; k < 7; k++){
+      var px = CX - RX + 16 + ((k * 37 + i * 53) % (2 * RX - 32));
+      var py = top + 9 + ((k * 23 + i * 11) % (LH - 14));
+      s += '<circle cx="'+px+'" cy="'+py+'" r="2.2" fill="'+crumb+'" opacity=".35"/>';
+    }
+    if (i >= 1 && fc){
+      var arc = 'M'+(CX-RX)+','+bot+' A'+RX+','+RY+' 0 0 0 '+(CX+RX)+','+bot;
+      s += '<path d="'+arc+'" fill="none" stroke="'+INK+'" stroke-width="11"/><path d="'+arc+'" fill="none" stroke="'+fc+'" stroke-width="5.5"/>';
+    }
+    s += '</g>';
+  }
+  if (layers > 0){
+    var tp = BASE - layers * LH;
+    s += '<g' + (o.animLayer ? ' class="drop"' : '') + '>';
+    if (fc){
+      s += '<path d="'+dripPath(tp)+'" fill="'+fc+'" stroke="'+INK+'" stroke-width="3" stroke-linejoin="round"/>';
+      s += '<ellipse cx="'+CX+'" cy="'+tp+'" rx="'+RX+'" ry="'+RY+'" fill="'+fc+'" stroke="'+INK+'" stroke-width="3"/>';
+      s += '<path d="M'+(CX-70)+','+(tp+2)+' Q'+CX+','+(tp-14)+' '+(CX+70)+','+(tp+2)+'" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="4" stroke-linecap="round"/>';
+    } else {
+      s += '<ellipse cx="'+CX+'" cy="'+tp+'" rx="'+RX+'" ry="'+RY+'" fill="'+mix(sc, '#ffffff', .22)+'" stroke="'+INK+'" stroke-width="3"/>';
+    }
+    var order = toppings.map(function(t, idx){ return { t:t, idx:idx }; }).sort(function(a, b){ return a.t.ny - b.t.ny; });
+    order.forEach(function(it){
+      var cx = CX + it.t.nx * (RX - 18), cy = tp + it.t.ny * (RY - 6);
+      var fresh = o.animTop && it.idx === toppings.length - 1;
+      s += '<g transform="translate('+cx.toFixed(1)+','+cy.toFixed(1)+')"><g'+(fresh ? ' class="pop"' : '')+'>'+toppingShape(it.t.t)+'</g></g>';
+    });
+    s += '</g>';
+  }
+  return s + '</svg>';
+}
+
+/* ---------- orders ---------- */
+function makeOrder(day, name, girl){
+  var maxL = day < 3 ? 2 : 3;
+  var tops = unlocked(TOPPINGS, day);
+  var total = Math.min(1 + Math.ceil(Math.random() * (1 + Math.min(day, 4))), 6);
+  var counts = {};
+  for (var i = 0; i < total; i++){ var t = rnd(tops); counts[t] = (counts[t] || 0) + 1; }
+  return {
+    names:name, girl:girl, get name(){ return this.names[LANG === 'en' ? 0 : 1]; },
+    flavor:rnd(unlocked(FLAVORS, day)),
+    frosting:rnd(unlocked(FROSTINGS, day)),
+    layers:1 + Math.floor(Math.random() * maxL),
+    toppings:counts,
+    face:{ skin:rnd(SKINS), hair:rnd(HAIRS), shirt:rnd(SHIRTS), scarf:rnd(SHIRTS), style:rnd(girl ? ['pigtails','bun','scarf','beanie'] : ['cap','beanie']) }
+  };
+}
+function orderSentence(o){
+  var tops = Object.keys(o.toppings).map(function(k){ return TOPPINGS[k].name + (o.toppings[k] > 1 ? ' ×' + o.toppings[k] : ''); }).join(t(t('، ')));
+  if (LANG === 'en') return "Hi! I'd like a " + FLAVORS[o.flavor].name.toLowerCase() + " cake with " + layersText(o.layers) + ", " + FROSTINGS[o.frosting].name.toLowerCase() + " frosting, and on top: " + tops + ".";
+  return t('السلام عليكم! أبغى كيكة ') + FLAVORS[o.flavor].name + t(' من ') + layersText(o.layers) + t('، بكريمة ') + FROSTINGS[o.frosting].name + t('، وفوقها: ') + tops + '.';
+}
+function ticketHTML(o){
+  var fl = FLAVORS[o.flavor], fr = FROSTINGS[o.frosting];
+  var tops = Object.keys(o.toppings).map(function(k){ return '<span class="chip">' + toppingIcon(k, 18) + '×' + o.toppings[k] + '</span>'; }).join('');
+  return '<div class="ticket">' +
+    '<div class="trow"><span class="tl">' + tr('Cake','الكيكة') + '</span><span class="chip"><i class="dot" style="background:' + fl.color + '"></i>' + tr(fl.name + ' cake','كيكة ' + fl.name) + '</span></div>' +
+    '<div class="trow"><span class="tl">' + tr('Layers','الطبقات') + '</span><span class="chip">' + layerIcon(o.layers) + layersText(o.layers) + '</span></div>' +
+    '<div class="trow"><span class="tl">' + tr('Frosting','الكريمة') + '</span><span class="chip"><i class="dot" style="background:' + fr.color + '"></i>' + tr(fr.name + ' frosting','كريمة ' + fr.name) + '</span></div>' +
+    '<div class="trow"><span class="tl">' + tr('Toppings','الزينة') + '</span><span class="tops">' + tops + '</span></div></div>';
+}
+function newUnlocks(day){
+  var out = [];
+  Object.keys(FLAVORS).forEach(function(k){ if (FLAVORS[k].unlock === day) out.push({ name:(LANG === 'en' ? FLAVORS[k].name + ' batter' : t('عجينة ') + FLAVORS[k].name), icon:'<i class="dot" style="background:'+FLAVORS[k].color+'"></i>' }); });
+  Object.keys(FROSTINGS).forEach(function(k){ if (FROSTINGS[k].unlock === day) out.push({ name:(LANG === 'en' ? FROSTINGS[k].name + ' frosting' : t('كريمة ') + FROSTINGS[k].name), icon:'<i class="dot" style="background:'+FROSTINGS[k].color+'"></i>' }); });
+  Object.keys(TOPPINGS).forEach(function(k){ if (TOPPINGS[k].unlock === day) out.push({ name:TOPPINGS[k].name, icon:toppingIcon(k, 18) }); });
+  return out;
+}
+function newWork(){ return { flavor:null, pour:0, pourScore:0, pourDone:false, bake:0, bakeScore:0, shade:.62, layers:0, frosting:null, topSel:null, toppings:[] }; }
+function patienceFactor(){
+  var o = G.order; if (!o) return 1;
+  var total = 55 + 12 * (o.layers + sumVals(o.toppings));
+  return clamp(1 - ((performance.now() - G.t0) / 1000) / total, 0, 1);
+}
+
+/* ---------- flow ---------- */
+function stopLoops(){ cancelAnimationFrame(G.raf); G.raf = 0; }
+function clearTimers(){ stopLoops(); clearInterval(G.patIv); G.patIv = 0; }
+function decorHTML(){
+  return '';
+  var h = '';
+  if (owns('bunting')) h += '<svg height="22" aria-hidden="true"><defs><pattern id="pfl" width="160" height="22" patternUnits="userSpaceOnUse"><g stroke="'+INK+'" stroke-width="2" stroke-linejoin="round"><path d="M6 3 L34 3 L20 20Z" fill="#FF8FB1"/><path d="M46 3 L74 3 L60 20Z" fill="#FFD966"/><path d="M86 3 L114 3 L100 20Z" fill="#7FD6B3"/><path d="M126 3 L154 3 L140 20Z" fill="#8FA8FF"/></g></pattern></defs><rect y="1" width="100%" height="21" fill="url(#pfl)"/><rect width="100%" height="3" fill="'+INK+'"/></svg>';
+  if (owns('lights')) h += '<svg height="20" aria-hidden="true"><defs><pattern id="plt" width="120" height="20" patternUnits="userSpaceOnUse"><path d="M0 3 Q30 15 60 3 Q90 15 120 3" fill="none" stroke="'+INK+'" stroke-width="2"/><circle cx="30" cy="11" r="4.5" fill="#FFE066" stroke="'+INK+'" stroke-width="1.6"/><circle cx="90" cy="11" r="4.5" fill="#FF8FB1" stroke="'+INK+'" stroke-width="1.6"/></pattern></defs><rect width="100%" height="20" fill="url(#plt)"/></svg>';
+  return h;
+}
+function shell(inner){
+  return '<div class="appRoot"><div class="awning" aria-hidden="true">' + new Array(15).join('<i></i>') + '</div><div class="decorStrip">' + decorHTML() + '</div><div class="wrap">' + inner + '</div></div>';
+}
+function fitCanvas(){
+  var cs = getComputedStyle(document.body), root = document.documentElement;
+  root.style.height = window.innerHeight + 'px';
+  var pl = parseFloat(cs.paddingLeft) || 0, pr = parseFloat(cs.paddingRight) || 0;
+  var aw = document.body.clientWidth - pl - pr, ah = document.body.clientHeight;
+  var sL = Math.min(aw / 1100, ah / 640), sP = Math.min(aw / 400, ah / 760);
+  var land = sL >= sP, W = land ? 1100 : 400, H = land ? 640 : 760, sc = land ? sL : sP;
+  app.className = land ? 'land' : 'port';
+  app.style.width = W + 'px'; app.style.height = H + 'px';
+  app.style.left = (pl + (aw - W * sc) / 2) + 'px';
+  app.style.top = ((ah - H * sc) / 2) + 'px';
+  app.style.transform = 'scale(' + sc + ')';
+}
+var POT = '<svg viewBox="0 0 60 70" aria-hidden="true"><path d="M30 38 C30 28 30 22 30 16" stroke="#3FA67F" stroke-width="3" fill="none"/><g stroke="'+INK+'" stroke-width="2" fill="#FF8FB1"><circle cx="30" cy="8" r="6"/><circle cx="21" cy="14" r="6"/><circle cx="39" cy="14" r="6"/><circle cx="24" cy="22" r="6"/><circle cx="36" cy="22" r="6"/></g><circle cx="30" cy="15" r="5" fill="#FFD23F" stroke="'+INK+'" stroke-width="2"/><path d="M12 38 H48 L43 66 H17Z" fill="#E9A06B" stroke="'+INK+'" stroke-width="3" stroke-linejoin="round"/></svg>';
+function decorIcon(k){
+  var a = 'width="30" height="26" viewBox="0 0 30 26" aria-hidden="true"';
+  if (k === 'bunting') return '<svg '+a+'><path d="M1 3 H29" stroke="'+INK+'" stroke-width="2"/><g stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"><path d="M3 3 L11 3 L7 16Z" fill="#FF8FB1"/><path d="M11 3 L19 3 L15 16Z" fill="#FFD966"/><path d="M19 3 L27 3 L23 16Z" fill="#7FD6B3"/></g></svg>';
+  if (k === 'lights') return '<svg '+a+'><path d="M1 5 Q8 15 15 5 Q22 15 29 5" fill="none" stroke="'+INK+'" stroke-width="2"/><circle cx="8" cy="14" r="4.5" fill="#FFE066" stroke="'+INK+'" stroke-width="1.6"/><circle cx="22" cy="14" r="4.5" fill="#FF8FB1" stroke="'+INK+'" stroke-width="1.6"/></svg>';
+  if (k === 'rainbow') return '<svg '+a+'><g fill="none" stroke-width="3.2"><path d="M3 22 A12 12 0 0 1 27 22" stroke="#FF6B6B"/><path d="M8 22 A7 7 0 0 1 22 22" stroke="#FFE066"/><path d="M12.5 22 A2.5 2.5 0 0 1 17.5 22" stroke="#6DB7FF"/></g></svg>';
+  return '<svg width="22" height="26" viewBox="0 0 60 70" aria-hidden="true">' + POT.replace(/^<svg[^>]*>/, '').replace('</svg>', '') + '</svg>';
+}
+function render(){
+  clearTimers();
+  if (G.screen === 'title') return renderTitle();
+  if (G.screen === 'dayintro') return renderDayIntro();
+  if (G.screen === 'dayend') return renderDayEnd();
+  renderGame();
+}
+function newGame(){ G.day = 1; G.money = 0; G.best = 0; G.owned = []; save(); G.screen = 'dayintro'; render(); }
+function startDay(){
+  var n = Math.min(2 + G.day, 7), en = LANG === 'en';
+  var pool = { ge:shuffle(GIRLS_E), ga:shuffle(GIRLS_A), be:shuffle(BOYS_E), ba:shuffle(BOYS_A) };
+  var origins = []; for (var q = 0; q < n; q++) origins.push(q % 2 ? 'a' : 'e'); origins = shuffle(origins);
+  G.queue = []; for (var i = 0; i < n; i++){ var girl = Math.random() < .5; G.queue.push(makeOrder(G.day, pool[(girl ? 'g' : 'b') + origins[i]].pop(), girl)); }
+  G.idx = 0; G.dayEarned = 0; G.dayScores = [];
+  startCustomer();
+}
+function startCustomer(){
+  G.order = G.queue[G.idx]; G.w = newWork(); G.stage = 'order'; G.t0 = performance.now(); G.mood = 'ok'; G.screen = 'game'; G.res = null;
+  render(); sfx('arrive');
+}
+function endDay(){
+  var avg = G.dayScores.length ? G.dayScores.reduce(function(a, b){ return a + b; }, 0) / G.dayScores.length : 0;
+  G.stats = { earned:G.dayEarned, avg:avg / 20 };
+  G.best = Math.max(G.best, G.dayEarned);
+  save(); G.screen = 'dayend'; render();
+}
+function setStage(s){ stopLoops(); G.stage = s; updateSteps(); layoutStage(); drawStation(); }
+function layoutStage(){ var b = $('#board'); if (b) b.classList.toggle('solo', G.stage === 'order'); }
+function updateSteps(){
+  var el = $('#steps'); if (!el) return;
+  var cur = STAGES.findIndex(function(s){ return s[0] === G.stage; });
+  el.innerHTML = STAGES.map(function(s, i){ return '<li class="'+(i < cur ? 'done' : i === cur ? 'on' : '')+'"><b>'+(i + 1)+'</b>'+t(s[1])+'</li>'; }).join('');
+}
+
+/* ---------- screens ---------- */
+function renderTitle(){
+  var sv = load(), has = sv && (sv.day > 1 || sv.money > 0);
+  var demo = cakeSVG({ layers:3, flavor:'velvet', shade:.62, frosting:'strawberry', toppings:[
+    { t:'candle', nx:0, ny:-.25 }, { t:'cherry', nx:-.62, ny:.2 }, { t:'strawberry', nx:.58, ny:.12 },
+    { t:'sprinkles', nx:-.2, ny:.55 }, { t:'blueberry', nx:.28, ny:.6 } ] });
+  app.innerHTML = shell(
+    '<div class="setbar"><button class="btn alt sm homeBtn" id="setBtn" style="margin-inline-start:auto">' + GEAR + tr('Settings','الإعدادات') + '</button></div>' +
+    '<div class="homeMain">' +
+      '<div class="homeSign"><div class="sign"><h1 class="logo">' + tr('Crumbles','كرمبلز') + '</h1><p class="tag">' + tr('Bake it. Decorate it. Serve it!','اخبز، زيّن، وقدّم!') + '</p></div></div>' +
+      '<div class="homeCake" aria-hidden="true">' + demo + '' + '</div>' +
+      '<div class="homeBtns"><div class="homeActions"><button class="btn big" id="newG">' + tr('New game','لعبة جديدة') + '</button>' +
+        (has ? '<button class="btn alt big" id="contG">' + tr('Continue (day ','كمّل (اليوم ') + sv.day + ')</button>' : '') + '</div>' +
+      (has ? '<div class="homeStats"><span class="pill">' + tr('Day ','اليوم ') + sv.day + '</span><span class="pill">' + COIN + sv.money + '</span>' +
+        (sv.best ? '<span class="pill">' + tr('Best day: ','أفضل يوم: ') + sv.best + '</span>' : '') + '</div>' : '') + '</div>' +
+    '</div>', true);
+  $('#newG').onclick = newGame;
+  $('#setBtn').onclick = function(){ openSettings(true); };
+  var c = $('#contG');
+  if (c) c.onclick = function(){ G.day = sv.day; G.money = sv.money; G.best = sv.best || 0; G.owned = sv.owned || []; G.screen = 'dayintro'; render(); };
+}
+function renderDayIntro(){
+  var n = Math.min(2 + G.day, 7), nu = newUnlocks(G.day);
+  app.innerHTML = shell('<div class="screenC"><div class="card narrow">' +
+    t('<h2>اليوم ') + G.day + '</h2>' +
+    '<p class="sub">' + n + t(' زبائن بانتظارك اليوم.</p>') +
+    (G.day === 1
+      ? t('<p>اقرأ التذكرة، اسكب العجين لين الخط، أخرج الكيكة من الفرن وهي ذهبية، ثم رتّب الطبقات والكريمة والزينة بنفس الطلب بالضبط.</p>')
+      : (nu.length ? t('<h3 style="margin-top:12px">جديد في المحل</h3><div class="newlist">') + nu.map(function(u){ return '<span class="chip">'+u.icon+u.name+'</span>'; }).join('') + '</div>' : '')) +
+    t('<div class="actions"><button class="btn big" id="open">افتح المحل</button></div></div></div>'));
+  $('#open').onclick = startDay;
+}
+function renderDayEnd(){
+  var s = G.stats;
+  app.innerHTML = shell('<div class="screenC"><div class="card narrow">' +
+    '<h2>' + tr('Finished day ','انتهى اليوم ') + G.day + '</h2>' +
+    '<div class="endStats"><div><span class="k">' + tr('Earned today','ربح اليوم') + '</span><b>' + COIN + s.earned + '</b></div>' +
+      '<div><span class="k">' + tr('Rating','التقييم') + '</span>' + starsHTML(s.avg) + '</div>' +
+      '<div><span class="k">' + tr('Your coins','رصيدك') + '</span><b>' + COIN + G.money + '</b></div></div>' +
+    '<div class="actions"><button class="btn big" id="nextDay">' + tr('Start day ','ابدأ اليوم ') + (G.day + 1) + '</button>' +
+      '<button class="btn alt big homeBtn" id="homeEnd">' + HOME_ICON + tr('Home','الرئيسية') + '</button></div>' +
+    '<h3>' + tr('New toppings','زينة جديدة') + '</h3>' +
+    '<p class="sub">' + tr('Spend coins on new cake toppings.','اصرف عملاتك على زينة كيك جديدة.') + '</p>' +
+    '<div class="shop">' + SHOP.map(function(it){
+      var own = owns(it.k);
+      return '<div class="shopItem' + (own ? ' own' : '') + '"><div class="sIcon">' + toppingIcon(it.k, 26) + '</div>' +
+        '<div class="sName"><b>' + pick(it.name) + '</b><small>' + tr('Cake topping','زينة كيك') + '</small></div>' +
+        (own ? '<span class="chip">' + tr('Owned','ملكك') + '</span>' : '<button class="btn sm buy" data-k="' + it.k + '"' + (G.money < it.price ? ' disabled' : '') + '>' + COIN + it.price + '</button>') + '</div>';
+    }).join('') + '</div></div></div>');
+  Array.prototype.forEach.call(document.querySelectorAll('.buy'), function(b){
+    b.onclick = function(){
+      var it = SHOP.filter(function(x){ return x.k === b.dataset.k; })[0];
+      if (it && G.money >= it.price && !owns(it.k)){ G.money -= it.price; G.owned.push(it.k); save(); sfx('coin'); renderDayEnd(); }
+    };
+  });
+  $('#homeEnd').onclick = goHome;
+  $('#nextDay').onclick = function(){ G.day++; save(); G.screen = 'dayintro'; render(); };
+}
+function renderGame(){
+  app.innerHTML = shell(
+    '<header class="hud"><div class="hudL"><button class="btn alt sm homeBtn" id="homeBtn" aria-label="' + tr('Home','الرئيسية') + '">' + HOME_ICON + '<span class="btxt">' + tr('Home','الرئيسية') + '</span></button><button class="btn alt sm homeBtn" id="setHud" aria-label="' + tr('Settings','الإعدادات') + '">' + GEAR + '</button>' + t('<div class="brand">كرمبلز</div>') + '</div><div class="pills">' +
+      t('<span class="pill">اليوم ') + G.day + '</span>' +
+      '<span class="pill">' + COIN + '<b id="coins">' + G.money + '</b></span>' +
+      t('<span class="pill">الزبون ') + (G.idx + 1) + t(' من ') + G.queue.length + '</span></div></header>' +
+    t('<ol class="steps" id="steps" aria-label="مراحل الطلب"></ol>') +
+    '<div class="board" id="board"><aside class="card client" id="client"></aside><section class="card station" id="station"></section></div>', true);
+  var o = G.order;
+  $('#client').innerHTML =
+    '<div class="face" id="face">' + customerSVG(o.face, G.mood) + '</div>' +
+    '<div class="cinfo"><h2 class="cname">' + o.name + '</h2>' +
+    t('<div class="patience"><span>صبر الزبون</span><div class="pbarTrack"><i id="pbar"></i></div></div>') + '</div>' +
+    '<div class="ticketWrap">' + ticketHTML(o) + '</div>';
+  updateSteps(); layoutStage(); drawStation(); startPatience();
+  $('#setHud').onclick = function(){ openSettings(false); };
+  $('#homeBtn').onclick = function(){
+    confirmDialog(tr('End the day?','تبي تنهي اليوم؟'),
+      tr('You will go back to the home page. Coins you already earned are kept, and the customers left today are skipped.','بترجع للصفحة الرئيسية. العملات اللي كسبتها محفوظة، والزبائن المتبقين اليوم بيتخطون.'),
+      tr('Keep playing','كمّل لعب'), tr('End the day','أنهِ اليوم'), goHome);
+  };
+}
+function startPatience(){
+  clearInterval(G.patIv);
+  G.patIv = setInterval(function(){
+    if (G.stage === 'result') return;
+    var f = patienceFactor(), bar = $('#pbar');
+    if (bar){ bar.style.width = (f * 100) + '%'; bar.style.background = f > .5 ? 'var(--mint)' : f > .25 ? 'var(--butter)' : 'var(--berry)'; }
+    var m = f > .6 ? 'ok' : f > .3 ? 'neutral' : 'sad';
+    if (m !== G.mood){ G.mood = m; var fc = $('#face'); if (fc) fc.innerHTML = customerSVG(G.order.face, m); }
+  }, 250);
+}
+function setMood(m){ G.mood = m; var fc = $('#face'); if (fc) fc.innerHTML = customerSVG(G.order.face, m); }
+function drawStation(){
+  ({ order:stationOrder, pour:stationPour, bake:stationBake, decorate:stationDecorate, result:stationResult })[G.stage]();
+}
+
+/* ---------- station: order ---------- */
+function stationOrder(){
+  var o = G.order;
+  $('#station').innerHTML =
+    '<div class="orderScene"><div class="bigFace">' + customerSVG(o.face, 'ok') + '</div>' +
+    '<h3 class="oname">' + o.name + '</h3>' +
+    '<div class="bubble">' + orderSentence(o) + '</div>' +
+    '<button class="btn big" id="go">' + tr('Start baking','ابدأ الخبز') + '</button></div>';
+  $('#go').onclick = function(){ G.t0 = performance.now(); setMood('ok'); setStage('pour'); };
+}
+
+/* ---------- station: pour ---------- */
+var PAN_BOTTOM = 182, PAN_H = 118, STREAM_Y = 36, TARGET = .72;
+function stationPour(){
+  var w = G.w, fl = unlocked(FLAVORS, G.day);
+  var targetY = PAN_BOTTOM - TARGET * PAN_H;
+  $('#station').innerHTML =
+    t('<h3>حضّر العجين</h3>') +
+    t('<p class="sub">اختر النكهة، ثم اضغط باستمرار على الزر واسكب لين توصل الخط.</p>') +
+    '<div class="swrow" id="flRow">' + fl.map(function(k){ return '<button class="sw'+(w.flavor === k ? ' sel' : '')+'" data-k="'+k+'"><span class="col" style="background:'+FLAVORS[k].color+'"></span>'+FLAVORS[k].name+'</button>'; }).join('') + '</div>' +
+    t('<svg class="stageSvg" viewBox="0 0 280 200" role="img" aria-label="قالب الكيك">') +
+      '<defs><clipPath id="panClip"><path d="M46,64 H234 L222,174 Q221,182 213,182 H67 Q59,182 58,174 Z"/></clipPath></defs>' +
+      '<path d="M112,6 H176 V30 Q176,36 170,36 H118 Q112,36 112,30 Z" fill="#fff" stroke="'+INK+'" stroke-width="3" stroke-linejoin="round"/>' +
+      '<path d="M176,12 q22,0 22,14 q0,12 -22,10" fill="none" stroke="'+INK+'" stroke-width="3" stroke-linecap="round"/>' +
+      '<rect id="stream" x="140" y="'+STREAM_Y+'" width="9" height="0" rx="3" fill="#E9DFC8"/>' +
+      '<path d="M46,64 H234 L222,174 Q221,182 213,182 H67 Q59,182 58,174 Z" fill="#DDE3EC"/>' +
+      '<g clip-path="url(#panClip)"><rect id="batter" x="40" y="'+PAN_BOTTOM+'" width="200" height="0" fill="#E9DFC8"/></g>' +
+      '<path d="M46,64 H234 L222,174 Q221,182 213,182 H67 Q59,182 58,174 Z" fill="none" stroke="'+INK+'" stroke-width="3.5" stroke-linejoin="round"/>' +
+      '<line x1="40" x2="240" y1="'+targetY+'" y2="'+targetY+'" stroke="'+'#E23D6B'+'" stroke-width="3" stroke-dasharray="7 5"/>' +
+      '<text x="262" y="'+(targetY + 4)+'" text-anchor="middle" font-size="12" font-weight="800" fill="'+INK+t('">الهدف</text>') +
+    '</svg>' +
+    '<p class="verdict" id="pourRes" aria-live="polite"></p>' +
+    t('<div class="actions"><button class="btn big hold" id="pourBtn">اضغط واسكب</button><button class="btn alt" id="pourReset">إعادة</button></div>') +
+    t('<div class="actions"><button class="btn" id="toOven" disabled>إلى الفرن</button></div>');
+
+  var batter = $('#batter'), stream = $('#stream'), btn = $('#pourBtn');
+  var pouring = false, last = 0;
+  var speed = .27;
+  function paintColor(){ var c = w.flavor ? FLAVORS[w.flavor].color : '#E9DFC8'; batter.setAttribute('fill', c); stream.setAttribute('fill', c); }
+  function setLevel(l){
+    var h = l * PAN_H, y = PAN_BOTTOM - h;
+    batter.setAttribute('y', y); batter.setAttribute('height', h + 4);
+    stream.setAttribute('height', pouring ? Math.max(0, y - STREAM_Y) : 0);
+  }
+  function tick(ts){
+    if (!pouring) return;
+    var dt = Math.min(.05, (ts - last) / 1000); last = ts;
+    w.pour = Math.min(1, w.pour + dt * speed);
+    setLevel(w.pour);
+    if (w.pour >= 1){ stop(); return; }
+    G.raf = requestAnimationFrame(tick);
+  }
+  function start(){
+    if (pouring || w.pourDone) return;
+    if (!w.flavor){ toast(t('اختر النكهة أول')); return; }
+    pouring = true; last = performance.now(); btn.classList.add('on'); startPourSound();
+    G.raf = requestAnimationFrame(tick);
+  }
+  function stop(){
+    if (!pouring) return;
+    pouring = false; cancelAnimationFrame(G.raf); btn.classList.remove('on'); stopPourSound();
+    setLevel(w.pour);
+    var err = Math.abs(w.pour - TARGET);
+    w.pourScore = w.pour >= 1 ? 0 : clamp(Math.round(100 - err * 450), 0, 100);
+    w.pourDone = true;
+    var low = w.pour < TARGET, k, m;
+    if (w.pour >= 1){ k = 'bad'; m = tr('Whoa, it spilled over! Tap Try again.','انسكب العجين! اضغط إعادة.'); }
+    else if (w.pourScore >= 90){ k = 'good'; m = tr('Smooth pour, right on the line!','سكبة ناعمة وبالضبط عند الخط!'); }
+    else if (w.pourScore >= 70){ k = 'ok'; m = low ? tr('So close! Just a tiny bit more next time.','قريب جداً! زد شوي المرة الجاية.') : tr('So close! Just a tiny bit less next time.','قريب جداً! قلل شوي المرة الجاية.'); }
+    else { k = 'bad'; m = low ? tr('A little light, the cake will come out thin.','العجين قليل، الكيكة بتطلع رقيقة.') : tr('A bit too much, the cake may overflow.','العجين كثير، الكيكة ممكن تفيض.'); }
+    var pr = $('#pourRes'); pr.className = 'verdict ' + k; pr.textContent = m;
+    $('#toOven').disabled = w.pour >= 1;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#flRow .sw'), function(b){
+    b.onclick = function(){
+      if (pouring) return;
+      w.flavor = b.dataset.k; paintColor();
+      Array.prototype.forEach.call(document.querySelectorAll('#flRow .sw'), function(x){ x.classList.toggle('sel', x === b); });
+    };
+  });
+  btn.addEventListener('pointerdown', function(e){ e.preventDefault(); if (btn.setPointerCapture) { try { btn.setPointerCapture(e.pointerId); } catch(err){} } start(); });
+  ['pointerup','pointercancel','lostpointercapture'].forEach(function(ev){ btn.addEventListener(ev, stop); });
+  btn.addEventListener('keydown', function(e){ if ((e.key === ' ' || e.key === 'Enter') && !e.repeat){ e.preventDefault(); start(); } });
+  btn.addEventListener('keyup', function(e){ if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); stop(); } });
+  btn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  $('#pourReset').onclick = function(){
+    if (pouring) return;
+    w.pour = 0; w.pourDone = false; w.pourScore = 0; setLevel(0); $('#pourRes').textContent = ''; $('#toOven').disabled = true;
+  };
+  $('#toOven').onclick = function(){ setStage('bake'); };
+  paintColor(); setLevel(w.pour);
+}
+
+/* ---------- station: bake ---------- */
+function ovenSVG(base){
+  return t('<svg class="stageSvg" viewBox="0 0 300 210" role="img" aria-label="الفرن">') +
+    '<rect x="20" y="8" width="260" height="194" rx="22" fill="#5B63D9" stroke="'+INK+'" stroke-width="3"/>' +
+    '<rect x="36" y="20" width="228" height="36" rx="10" fill="#8C93F0" stroke="'+INK+'" stroke-width="3"/>' +
+    '<circle cx="66" cy="38" r="9" fill="#FFD966" stroke="'+INK+'" stroke-width="2.5"/><circle cx="100" cy="38" r="9" fill="#FFD966" stroke="'+INK+'" stroke-width="2.5"/>' +
+    '<rect x="170" y="28" width="80" height="20" rx="6" fill="#1D1A2B"/>' +
+    '<text id="ovenTemp" x="210" y="43" text-anchor="middle" font-size="13" font-weight="800" fill="#7CFFB8">180°</text>' +
+    '<rect x="40" y="68" width="220" height="122" rx="16" fill="#2B2230" stroke="'+INK+'" stroke-width="3"/>' +
+    '<rect class="glow" x="50" y="176" width="200" height="8" rx="4" fill="#FF8A3D"/>' +
+    '<path id="bk" d="M90 168 V142 Q90 112 150 112 Q210 112 210 142 V168 Z" fill="'+base+'" stroke="'+INK+'" stroke-width="3" stroke-linejoin="round"/>' +
+    '<rect x="72" y="166" width="156" height="8" rx="3" fill="#B9BCC9" stroke="'+INK+'" stroke-width="2"/>' +
+    '<g class="smoke" id="smoke" style="display:none"><circle cx="125" cy="102" r="8" fill="#C9C9D2"/><circle cx="150" cy="96" r="9" fill="#C9C9D2"/><circle cx="176" cy="102" r="8" fill="#C9C9D2"/></g>' +
+  '</svg>';
+}
+function stationBake(){
+  var w = G.w, base = FLAVORS[w.flavor].color;
+  var hw = .07, C = .62;
+  $('#station').innerHTML =
+    t('<h3>الفرن</h3>') +
+    t('<p class="sub">اضغط «أخرج الكيك» لما المؤشر يدخل المنطقة الخضراء.</p>') +
+    ovenSVG(base) +
+    '<div class="gauge" aria-hidden="true"><div class="zone" style="inset-inline-start:'+((C - hw) * 100)+'%;width:'+(hw * 200)+'%"></div><div class="needle" id="needle"></div></div>' +
+    t('<div class="gl"><span>نيّة</span><span>محروقة</span></div>') +
+    '<p class="verdict" id="bakeRes" aria-live="polite"></p>' +
+    t('<div class="actions"><button class="btn big" id="takeOut">أخرج الكيك</button><button class="btn big" id="toDeco" hidden>إلى التزيين</button></div>');
+  var t0 = performance.now(), done = false, cur = 0, SPEED = .125;
+  var bk = $('#bk'), needle = $('#needle'), smoke = $('#smoke'), temp = $('#ovenTemp');
+  function paint(p){
+    cur = p;
+    needle.style.insetInlineStart = (p * 100) + '%';
+    bk.setAttribute('fill', shadeColor(base, p));
+    smoke.style.display = p > .86 ? '' : 'none';
+    temp.textContent = Math.round(150 + p * 70) + '°';
+  }
+  function finish(p){
+    if (done) return; done = true; stopLoops();
+    paint(p); w.bake = p; w.shade = p;
+    var d = Math.abs(p - C);
+    w.bakeScore = d <= hw ? Math.round(100 - (d / hw) * 8) : clamp(Math.round(100 - (d - hw) * 500), 0, 100);
+    var k, m;
+    if (d <= hw){ k = 'good'; m = tr('Golden and gorgeous! Out at just the right time.','ذهبية وجميلة! طلعتها بالوقت المناسب.'); }
+    else if (p < C){ k = w.bakeScore >= 60 ? 'ok' : 'bad'; m = tr('Out a little early, the middle is still gooey.','طلعتها بدري شوي، الوسط لسه طري.'); }
+    else { k = w.bakeScore >= 60 ? 'ok' : 'bad'; m = tr('Oops, a bit too toasty!','أوه، محمّرة زيادة شوي!'); }
+    var br = $('#bakeRes'); br.className = 'verdict ' + k; br.textContent = m;
+    sfx(w.bakeScore >= 80 ? 'ding' : 'bad'); $('#takeOut').hidden = true; $('#toDeco').hidden = false; $('#toDeco').focus();
+  }
+  function step(ts){
+    if (done) return;
+    var p = Math.min(1, (ts - t0) / 1000 * SPEED);
+    paint(p);
+    if (p >= 1){ finish(1); return; }
+    G.raf = requestAnimationFrame(step);
+  }
+  $('#takeOut').onclick = function(){ finish(cur); };
+  $('#toDeco').onclick = function(){ setStage('decorate'); };
+  G.raf = requestAnimationFrame(step);
+}
+
+/* ---------- station: decorate ---------- */
+function stationDecorate(){
+  var w = G.w;
+  var frs = unlocked(FROSTINGS, G.day), tps = unlocked(TOPPINGS, G.day);
+  if (w.layers < 1) w.layers = 1;
+  if (!w.topSel) w.topSel = tps[0];
+  $('#station').innerHTML =
+    t('<h3>زيّن الكيكة</h3>') +
+    t('<p class="sub decoSub">رتّب الطبقات، اختر الكريمة، ثم اضغط فوق الكيكة لتضع الزينة.</p>') +
+    '<div class="deco"><div class="cakeBox" id="cakeBox"></div><div class="ctls">' +
+      t('<div class="ctl"><h4>الطبقات</h4><div class="stepper"><button class="btn alt sm" id="lm" aria-label="إنقاص طبقة">−</button><b id="lc">')+w.layers+t('</b><button class="btn alt sm" id="lp" aria-label="إضافة طبقة">+</button></div></div>') +
+      t('<div class="ctl"><h4>الكريمة</h4><div class="swrow" id="frRow">') + frs.map(function(k){ return '<button class="sw" data-k="'+k+'" title="'+FROSTINGS[k].name+'"><span class="col" style="background:'+FROSTINGS[k].color+'"></span><span class="lbl">'+FROSTINGS[k].name+'</span></button>'; }).join('') + '</div></div>' +
+      t('<div class="ctl tctl"><h4>الزينة</h4><div class="swrow" id="tpRow">') + tps.map(function(k){ return '<button class="sw" data-k="'+k+'" title="'+TOPPINGS[k].name+'">'+toppingIcon(k, 28)+'<span class="lbl">'+TOPPINGS[k].name+'</span><i class="n" data-n="'+k+'" hidden>0</i></button>'; }).join('') + '</div></div>' +
+      t('<div class="actions ctlActs"><button class="btn alt sm" id="undo">تراجع</button><button class="btn alt sm" id="clr">مسح الزينة</button></div>') +
+    '</div></div>' +
+    t('<div class="actions"><button class="btn big" id="serve">قدّم الكيكة</button></div>');
+
+  var box = $('#cakeBox');
+  function badges(){
+    var c = {}; w.toppings.forEach(function(t){ c[t.t] = (c[t.t] || 0) + 1; });
+    Array.prototype.forEach.call(document.querySelectorAll('#tpRow .n'), function(el){ var n = c[el.dataset.n] || 0; el.textContent = n; el.hidden = n === 0; });
+  }
+  function draw(anim){
+    box.innerHTML = cakeSVG({ layers:w.layers, flavor:w.flavor, shade:w.shade, frosting:w.frosting, toppings:w.toppings, animLayer:anim === 'layer', animTop:anim === 'top' });
+    $('#lc').textContent = w.layers; badges();
+  }
+  function marks(){
+    Array.prototype.forEach.call(document.querySelectorAll('#frRow .sw'), function(b){ b.classList.toggle('sel', b.dataset.k === w.frosting); });
+    Array.prototype.forEach.call(document.querySelectorAll('#tpRow .sw'), function(b){ b.classList.toggle('sel', b.dataset.k === w.topSel); });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#frRow .sw'), function(b){ b.onclick = function(){ w.frosting = b.dataset.k; marks(); draw(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('#tpRow .sw'), function(b){ b.onclick = function(){ w.topSel = b.dataset.k; marks(); }; });
+  $('#lp').onclick = function(){ if (w.layers >= 4){ toast(t('أقصى شي 4 طبقات')); return; } w.layers++; sfx('drop'); draw('layer'); };
+  $('#lm').onclick = function(){ if (w.layers <= 1){ toast(t('لازم طبقة وحدة على الأقل')); return; } w.layers--; draw(); };
+  $('#undo').onclick = function(){ w.toppings.pop(); draw(); };
+  $('#clr').onclick = function(){ w.toppings = []; draw(); };
+  box.addEventListener('pointerdown', function(e){
+    var svg = box.querySelector('svg'); if (!svg) return;
+    if (!w.topSel){ toast(t('اختر زينة أول')); return; }
+    var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    var p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    var top = BASE - w.layers * LH;
+    var nx = (p.x - CX) / (RX - 18), ny = (p.y - top) / (RY - 6);
+    if (Math.abs(nx) > 1.6 || ny < -3.5 || ny > 2.5){ toast(t('اضغط فوق الكيكة')); return; }
+    var r = Math.hypot(nx, ny); if (r > 1){ nx /= r; ny /= r; }
+    if (w.toppings.length >= 10){ toast(t('الكيكة امتلأت')); return; }
+    w.toppings.push({ t:w.topSel, nx:nx, ny:ny }); sfx('pop'); draw('top');
+  });
+  $('#serve').onclick = function(){
+    if (!w.frosting){ toast(t('اختر الكريمة أول')); return; }
+    goResult();
+  };
+  marks(); draw();
+}
+
+/* ---------- scoring + result ---------- */
+function scoreOrder(o, w){
+  var parts = [];
+  parts.push({ label:t('سكب العجين'), s:w.pourScore, wt:.10, note:'' });
+  parts.push({ label:t('الخبز'), s:w.bakeScore, wt:.20, note:w.bakeScore < 85 ? (w.bake < .62 ? t('الكيكة طلعت نيّة') : t('الكيكة احترقت شوي')) : '' });
+  var fOk = w.flavor === o.flavor;
+  parts.push({ label:t('النكهة'), s:fOk ? 100 : 0, wt:.15, note:fOk ? '' : t('المطلوب ') + FLAVORS[o.flavor].name });
+  var ld = Math.abs(w.layers - o.layers);
+  parts.push({ label:t('الطبقات'), s:ld === 0 ? 100 : ld === 1 ? 45 : 0, wt:.15, note:ld ? t('المطلوب ') + layersText(o.layers) : '' });
+  var frOk = w.frosting === o.frosting;
+  parts.push({ label:t('الكريمة'), s:frOk ? 100 : 0, wt:.15, note:frOk ? '' : (LANG === 'en' ? 'Ordered: ' + FROSTINGS[o.frosting].name + ' frosting' : t('المطلوب كريمة ') + FROSTINGS[o.frosting].name) });
+  var have = {}; w.toppings.forEach(function(t){ have[t.t] = (have[t.t] || 0) + 1; });
+  var types = {}; Object.keys(o.toppings).concat(Object.keys(have)).forEach(function(k){ types[k] = 1; });
+  var diff = 0; Object.keys(types).forEach(function(k){ diff += Math.abs((o.toppings[k] || 0) - (have[k] || 0)); });
+  var want = sumVals(o.toppings);
+  var tS = clamp(Math.round(100 * (1 - diff / Math.max(want, 1) * .85)), 0, 100);
+  parts.push({ label:t('الزينة'), s:tS, wt:.25, note:diff ? t('راجع الزينة على التذكرة') : '' });
+  var total = Math.round(parts.reduce(function(a, p){ return a + p.s * p.wt; }, 0));
+  return { parts:parts, total:total };
+}
+function goResult(){
+  var o = G.order, w = G.w;
+  G.speed = patienceFactor();
+  var r = scoreOrder(o, w);
+  var base = 10 + 4 * o.layers + 2 * sumVals(o.toppings);
+  var price = Math.round(base * r.total / 100);
+  var tip = r.total >= 60 ? Math.round(price * .6 * G.speed * (r.total / 100)) : 0;
+  r.price = price; r.tip = tip; r.coins = price + tip;
+  G.res = r; G.money += r.coins; G.dayEarned += r.coins; G.dayScores.push(r.total);
+  save();
+  var c = $('#coins'); if (c) c.textContent = G.money;
+  setStage('result'); sfx(r.total >= 85 ? 'good' : r.total >= 55 ? 'ok' : 'bad'); setTimeout(function(){ sfx('coin'); }, 450);
+  setMood(r.total >= 85 ? 'happy' : r.total >= 60 ? 'ok' : r.total >= 35 ? 'neutral' : 'sad');
+  var pb = $('#pbar'); if (pb) pb.style.width = (G.speed * 100) + '%';
+}
+function stationResult(){
+  var r = G.res, w = G.w, last = G.idx + 1 >= G.queue.length;
+  var verdict = r.total >= 90 ? t('تحفة! الزبون طار من الفرحة') : r.total >= 75 ? t('حلوة، الزبون راضي') : r.total >= 55 ? t('مقبولة، بس تقدر تتحسن') : t('مو هذا اللي طلبته');
+  var fixes = r.parts.filter(function(p){ return p.note; }).slice(0, 3).map(function(p){ return '<li>' + p.label + ': ' + p.note + '</li>'; }).join('');
+  $('#station').innerHTML =
+    '<div class="resultGrid"><div class="cakeBox" style="cursor:default">' +
+      cakeSVG({ layers:w.layers, flavor:w.flavor, shade:w.shade, frosting:w.frosting, toppings:w.toppings }) +
+    '</div><div>' + starsHTML(r.total / 20) +
+      '<h3 class="resTitle">' + t(verdict) + '</h3>' +
+      (fixes ? '<ul class="fixes"><h4>' + t(t('للتحسين')) + '</h4>' + fixes + '</ul>' : '') +
+      '<div class="pay"><span class="chip">' + t(t('السعر ')) + COIN + r.price + '</span><span class="chip">' + t(t('إكرامية ')) + COIN + r.tip + '</span><span class="chip" style="background:var(--butter)">' + t(t('المجموع ')) + COIN + r.coins + '</span></div>' +
+      '<div class="actions"><button class="btn big" id="next">' + t(last ? t('إنهاء اليوم') : t('الزبون التالي')) + '</button></div>' +
+    '</div></div>';
+  $('#next').onclick = function(){ G.idx++; if (G.idx >= G.queue.length) endDay(); else startCustomer(); };
+}
+
+/* ---------- boot ---------- */
+var app = $('#app');
+applyLang();
+fitCanvas();
+window.addEventListener('resize', fitCanvas);
+window.addEventListener('orientationchange', function(){ setTimeout(fitCanvas, 120); });
+if (window.visualViewport) window.visualViewport.addEventListener('resize', fitCanvas);
+render();
+})();
+</script>
+</body>
+</html>
