@@ -8,7 +8,9 @@
 <meta property="og:title" content="Al Noor School Gaming Studio">
 <meta property="og:description" content="معرض ألعاب طالبات مدرسة النور الثانوية للبنات — مملكة البحرين">
 <meta property="og:image" content="assets/escape-the-fort.jpg">
-<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Cairo:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bungee&family=Cairo:wght@500;700;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Cairo:wght@500;700;900&display=swap"></noscript>
 <style>
 :root{
   --red:#CE1126; --deep:#7E0A19; --gold:#F5B800;
@@ -105,17 +107,35 @@ footer b{font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.5px; 
 .play[disabled],.play[disabled]:hover{cursor:default; background:#E4DCD6; color:#8A7B72; box-shadow:none; transform:none}
 .play[disabled]::before{display:none}
 .play[disabled] svg{display:none}
+/* FOOTER LINKS + GATE */
+.flinks{margin-top:16px; display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; font-size:.85rem}
+.flinks button{background:rgba(255,255,255,.14); color:#fff; border:0; border-radius:999px; padding:6px 15px; font:inherit; font-weight:700; cursor:pointer; transition:.15s}
+.flinks button:hover{background:rgba(255,255,255,.3)}
+.flinks .ver{opacity:.65; direction:ltr}
+#gt{position:fixed; inset:0; z-index:95; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(0,0,0,.62)}
+#gt.open{display:flex}
+.gbox{width:min(400px,100%); background:var(--card); color:var(--ink); border-radius:20px; padding:26px 24px; box-shadow:0 30px 70px rgba(0,0,0,.5); text-align:center}
+.gbox h4{margin:0 0 6px; font-size:1.25rem; font-weight:900}
+.gbox p{margin:0 0 16px; color:var(--sub); font-weight:600}
+.gbox input{width:100%; border:2px solid rgba(128,128,128,.45); border-radius:12px; padding:11px 14px; font:inherit; background:transparent; color:inherit; text-align:center; outline:0; letter-spacing:2px}
+.gbox input:focus{border-color:var(--red)}
+.gbox .gerr{min-height:1.5em; color:#C0182B; font-weight:700; margin:8px 0 12px; font-size:.92rem}
+.gbtns{display:flex; gap:10px; justify-content:center}
+.gbtns button{border:0; border-radius:999px; padding:10px 26px; font:inherit; font-weight:800; cursor:pointer}
+.gbtns .ok{background:var(--red); color:#fff}
+.gbtns .ok:disabled{opacity:.6}
+.gbtns .no{background:transparent; color:var(--ink)}
 /* SOCIAL */
 .social{display:flex; align-items:stretch; gap:8px; margin:14px 0 0}
-.sbtn{flex:1; justify-content:center; display:inline-flex; align-items:center; gap:7px; padding:7px 14px; border-radius:999px; border:0;
+.sbtn{flex:1; justify-content:center; display:inline-flex; align-items:center; gap:7px; padding:7px 14px; border-radius:999px; border:1.5px solid rgba(206,17,38,.25);
   background:transparent; color:var(--ink); font:inherit; font-weight:800; cursor:pointer; transition:.18s}
-.sbtn:hover{background:rgba(206,17,38,.08)}
+.sbtn:hover{background:rgba(206,17,38,.08); border-color:var(--red)}
 .sbtn svg{width:20px; height:20px; flex:none}
-.sbtn.like[aria-pressed="true"]{color:var(--red); background:rgba(206,17,38,.1)}
+.sbtn.like[aria-pressed="true"]{color:var(--red); border-color:var(--red); background:rgba(206,17,38,.1)}
 .sbtn.like[aria-pressed="true"] svg{fill:var(--red); animation:beat .45s cubic-bezier(.2,1.6,.4,1)}
 @keyframes beat{0%{transform:scale(.6)}60%{transform:scale(1.35)}100%{transform:scale(1)}}
 .sbtn.plays{cursor:default}
-.sbtn.plays:hover{background:transparent}
+.sbtn.plays:hover{background:transparent; border-color:rgba(206,17,38,.25)}
 #cm{position:fixed; inset:0; z-index:90; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(0,0,0,.58)}
 #cm.open{display:flex}
 .cpanel{width:min(640px,100%); max-height:min(88vh,780px); display:flex; flex-direction:column; background:var(--card); color:var(--ink);
@@ -211,7 +231,14 @@ footer b{font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.5px; 
   <div class="zig"></div>
   <b>Al Noor School Gaming Studio</b>
   مدرسة النور الثانوية للبنات — مملكة البحرين
+  <div class="flinks"><button id="adminLink" type="button">🔒 دخول المشرفة</button><button id="refreshLink" type="button">🔄 تحديث الصفحة</button><span class="ver" id="ver"></span></div>
 </footer>
+<div id="gt" role="dialog" aria-modal="true" aria-labelledby="gtT"><div class="gbox">
+  <h4 id="gtT">🔒 دخول المشرفة</h4><p>أدخلي كلمة المرور للمتابعة إلى لوحة المشرف.</p>
+  <input id="gpw" type="password" autocomplete="current-password" aria-label="كلمة المرور" placeholder="كلمة المرور">
+  <p class="gerr" id="gerr" aria-live="polite"></p>
+  <div class="gbtns"><button class="ok" id="gok" type="button">دخول</button><button class="no" id="gno" type="button">إلغاء</button></div>
+</div></div>
 <div id="cm" role="dialog" aria-modal="true" aria-labelledby="cmh"><div class="cpanel">
   <div class="chead"><div><h4 id="cmh"><span id="cmn">0</span> تعليق</h4><small id="cmg"></small></div><button class="cx" id="cmx" type="button" aria-label="إغلاق">✕</button></div>
   <div class="cbody">
@@ -238,16 +265,22 @@ footer b{font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.5px; 
 /* ===== قائمة الألعاب =====
    تُقرأ من games.json (ويعدّلها المشرف من صفحة admin.html). النسخة المضمّنة هنا احتياطية عند تعذّر تحميل الملف. */
 const DEFAULT_DATA = {"categories": [{"k": "national", "t": "وطنية", "i": "🏛️"}, {"k": "puzzle", "t": "ألغاز وبازل", "i": "🧩"}, {"k": "adventure", "t": "مغامرات", "i": "🏃"}, {"k": "arcade", "t": "أركيد وسرعة", "i": "⚡"}, {"k": "quiz", "t": "معلومات ومسابقات", "i": "🧠"}], "games": [{"id": "pearls-of-bahrain", "title": "Pearls of Bahrain", "by": "سارة التيتون", "url": "games/pearls-of-bahrain.html", "img": "assets/pearls-of-bahrain.jpg", "tags": ["national", "arcade"], "theme": "pearl", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "horizon-paths", "title": "دروب الأفق", "by": "جمان حسين محمد", "url": "games/horizon-paths.html", "img": "assets/horizon-paths.jpg", "tags": ["adventure"], "theme": "race", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "escape-the-fort", "title": "الهروب من القلعة", "by": "فاطمة سعيد جعفر", "url": "games/escape-the-fort.html", "img": "assets/escape-the-fort.jpg", "tags": ["puzzle"], "theme": "fort", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "pearl-sudoku", "title": "سودوكو اللؤلؤ", "by": "زهراء علي المختار · رقية حسين الحايكي", "url": "games/pearl-sudoku.html", "img": "assets/pearl-sudoku.jpg", "tags": ["puzzle"], "theme": "space", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "who-wants-to-be-a-millionaire", "title": "من سيربح المليون؟ – النسخة البحرينية", "by": "أطياب منصور", "url": "games/who-wants-to-be-a-millionaire.html", "img": "assets/who-wants-to-be-a-millionaire.jpg", "tags": ["quiz", "national"], "theme": "maze", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "little-detective", "title": "المحقق الصغير", "by": "زهراء علي المختار · رقية حسين الحايكي", "url": "games/little-detective.html", "img": "assets/little-detective.jpg", "tags": ["puzzle"], "theme": "tree", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "fox-lightning", "title": "برق الثعلب", "by": "طالبة 3فيز1", "url": "games/fox-lightning.html", "img": "assets/fox-lightning.jpg", "tags": ["adventure", "arcade"], "theme": "falcon", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "sparks-adventure", "title": "Spark's Adventure", "by": "", "url": "", "img": "assets/sparks-adventure.jpg", "tags": ["adventure"], "theme": "quiz", "soon": true, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "dilmun-land", "title": "أرض دلمون", "by": "زينب", "url": "games/dilmun-land.html", "img": "assets/dilmun-land.jpg", "tags": ["national", "adventure"], "theme": "pearl", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "dilmun-ship", "title": "سفينة دلمون", "by": "", "url": "", "img": "", "tags": ["national"], "theme": "ship", "soon": true, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "garden-of-light", "title": "حديقة النور", "by": "", "url": "", "img": "", "tags": [], "theme": "garden", "soon": true, "added": "", "updated": "", "rev": "", "note": ""}]};
-const loadData=async()=>{
-  try{
-    const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),4000);
-    const r=await fetch("games.json?t="+Date.now(),{cache:"no-store",signal:ctl.signal});clearTimeout(tm);
-    if(r.ok){const d=await r.json();
-      if(d&&Array.isArray(d.games)&&d.games.length)return {categories:Array.isArray(d.categories)?d.categories:DEFAULT_DATA.categories,games:d.games};}
-  }catch(e){}
-  return DEFAULT_DATA;
-};
-const DATA=await loadData();
+const $=s=>document.querySelector(s);
+$("#logo").innerHTML=["Al Noor","School","Gaming Studio"].map((w,wi)=>{
+  let n=[0,6,12][wi];
+  return `<span class="w">${[...w].map(c=>`<span class="l" style="--i:${n++}">${c===" "?"&nbsp;":c}</span>`).join("")}</span>`;
+}).join("");
+/* التحميل السريع: نعرض فوراً آخر نسخة محفوظة على الجهاز (أو النسخة المضمّنة)، ونتحقق من games.json في الخلفية.
+   إذا وُجد تغيير تُحفظ النسخة الجديدة وتُعاد الصفحة مرة واحدة. */
+const FETCH=fetch("games.json",{cache:"no-cache"}).then(r=>r.ok?r.json():null).catch(()=>null);
+const okData=d=>!!(d&&Array.isArray(d.games)&&d.games.length);
+const readCache=()=>{try{const d=JSON.parse(localStorage.getItem("alnoor_games")||"null");return okData(d)?d:null}catch(e){return null}};
+const saveCache=d=>{try{localStorage.setItem("alnoor_games",JSON.stringify(d))}catch(e){}};
+let SHOWN=readCache();
+if(!SHOWN){const d=await Promise.race([FETCH,new Promise(r=>setTimeout(()=>r(null),800))]);if(okData(d)){SHOWN=d;saveCache(d);}}
+if(!SHOWN)SHOWN=DEFAULT_DATA;
+const SHOWN_TXT=JSON.stringify(SHOWN);
+const DATA={categories:Array.isArray(SHOWN.categories)?SHOWN.categories:DEFAULT_DATA.categories,games:SHOWN.games,settings:(SHOWN.settings&&typeof SHOWN.settings==="object")?SHOWN.settings:{}};
 const GAMES=DATA.games.filter(g=>g&&g.title).map(g=>({...g,
   tags:Array.isArray(g.tags)?g.tags:[],
   url:/^(games\/|https?:\/\/)/.test(g.url||"")?g.url:"",
@@ -257,6 +290,7 @@ const GAMES=DATA.games.filter(g=>g&&g.title).map(g=>({...g,
    endpoint: رابط Google Apps Script بعد النشر (الخطوات في backend/SETUP-ar.md).
    إذا تُرك فارغاً يعمل الموقع بالوضع التجريبي (البيانات تُحفظ على جهاز الزائر فقط). */
 const SOCIAL={endpoint:"https://script.google.com/macros/s/AKfycbwLYU3UvkW45XdCZv2hZW25g7oyyUFIug_oNFx590zEk7-l0PLzyp8TgB5Gv0kq0YkV/exec"};
+if(!SOCIAL.endpoint&&DATA.settings&&/^https:\/\/script\.google(?:usercontent)?\.com\/[\w\-\/.]+$/.test(DATA.settings.endpoint||""))SOCIAL.endpoint=DATA.settings.endpoint;
 GAMES.forEach((g,i)=>{g.id=g.id||(g.url?g.url.split("/").pop().replace(/\.html$/,""):"game-"+(i+1));});
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const uid=()=>(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
@@ -281,6 +315,8 @@ const Store=(()=>{
     remove(cid){const d=D();d.comments=d.comments.filter(c=>c.id!==cid);W(d);}
   };
 })();
+const STATS_FETCH=Store.demo?null:Store.stats().catch(()=>null);
+const STATS_KEY="alnoor_stats";
 const fmt=n=>{n=n||0;return n>=1000?(n/1000).toFixed(n>=10000?0:1).replace(/\.0$/,"")+"K":String(n)};
 const AGO=[["سنة","سنتين","سنوات",31536000],["شهر","شهرين","أشهر",2592000],["يوم","يومين","أيام",86400],["ساعة","ساعتين","ساعات",3600],["دقيقة","دقيقتين","دقائق",60]];
 const ago=t=>{const s=(Date.now()-new Date(t).getTime())/1000;if(!(s>=60))return"الآن";for(const[a,b,c,n]of AGO){const k=Math.floor(s/n);if(k>=1)return"منذ "+(k===1?a:k===2?b:k+" "+(k<=10?c:a));}return"الآن";};
@@ -295,8 +331,8 @@ const socialBar=g=>`<div class="social" data-id="${esc(g.id)}">
 /* ===== تحديث تلقائي للنسخة القديمة (تجاوز التخزين المؤقت) =====
    BUILD يتغيّر مع كل نسخة جديدة، وكذلك الحقل build في ملف version.json.
    إذا عدّلتِ الموقع يدوياً فغيّري القيمتين معاً إلى أي نص جديد. */
-const BUILD="20261014-042316";
-const withV=(u,v)=>(!u||u.startsWith("data:")||u.startsWith("#"))?u:u+(u.includes("?")?"&":"?")+"v="+encodeURIComponent(v||BUILD);
+const BUILD="20261014-094428";
+const withV=(u,v)=>(!u||!v||u.startsWith("data:")||u.startsWith("#"))?u:u+(u.includes("?")?"&":"?")+"v="+encodeURIComponent(v);
 const esc=x=>String(x==null?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 /* شارة «جديدة» / «تحديث» تظهر تلقائياً لمدة BADGE_DAYS يوماً من تاريخ الإضافة أو آخر تحديث */
 const BADGE_DAYS=14;
@@ -307,14 +343,14 @@ const badge=g=>{if(g.soon)return"";const a=Date.parse(g.added)||0,u=Date.parse(g
 async function checkUpdate(){
   if(location.protocol==="file:"||BUILD==="dev")return;
   try{
-    const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;
+    const r=await fetch("version.json",{cache:"no-cache"});if(!r.ok)return;
     const {build}=await r.json();const u=new URL(location.href);
     if(!build||build===BUILD||u.searchParams.get("v")===build)return;
     if(document.querySelector("#cm.open,#gm.open"))return;
     u.searchParams.set("v",build);location.replace(u.toString());
   }catch(e){}
 }
-checkUpdate();
+setTimeout(checkUpdate,1500);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate();});
 
 /* ---- generated cover art (used when no img is given) ---- */
@@ -342,15 +378,9 @@ const cover=(t,i)=>{const [a,b,f]=THEMES[t]||THEMES.pearl;
   return `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" role="img" aria-hidden="true"><defs><linearGradient id="g${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="320" height="200" fill="url(#g${i})"/>${f()}</svg>`;};
 
 /* ---- render ---- */
-const $=s=>document.querySelector(s);
-$("#logo").innerHTML=["Al Noor","School","Gaming Studio"].map((w,wi)=>{
-  let n=[0,6,12][wi];
-  return `<span class="w">${[...w].map(c=>`<span class="l" style="--i:${n++}">${c===" "?"&nbsp;":c}</span>`).join("")}</span>`;
-}).join("");
-
 $("#grid").innerHTML=GAMES.map((g,i)=>`
   <div class="wrap" style="--i:${i}"><article class="card${g.soon?' soon':''}">
-    <div class="art"><span class="num">#${String(i+1).padStart(2,"0")}</span>${badge(g)}${g.soon?'<span class="stamp">قريباً</span>':""}${g.img?`<img src="${esc(withV(g.img,g.rev))}" alt="${esc(g.title)}" style="width:100%;height:100%;object-fit:cover">`:cover(g.theme,i)}</div>
+    <div class="art"><span class="num">#${String(i+1).padStart(2,"0")}</span>${badge(g)}${g.soon?'<span class="stamp">قريباً</span>':""}${g.img?`<img src="${esc(withV(g.img,g.rev))}" alt="${esc(g.title)}" loading="${i<3?"eager":"lazy"}" decoding="async" style="width:100%;height:100%;object-fit:cover">`:cover(g.theme,i)}</div>
     <div class="body">
       <h3>${esc(g.title)}</h3>
       ${g.by?`<p class="by"><b>${/[·،&]/.test(g.by)?"إعداد الطالبات":"إعداد الطالبة"}:</b><br>${esc(g.by)}</p>`:""}
@@ -380,17 +410,20 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{
 document.querySelectorAll(".wrap,#head").forEach(el=>io.observe(el));
 
 /* ===== social wiring ===== */
-let STATS={}; const liked=new Set(ls.get("alnoor_liked",[])); const lastPlay={};
+let STATS={},HAVE=Store.demo,ARRIVED=Store.demo;const early={};
+if(!Store.demo){const c=ls.get(STATS_KEY,null);if(c&&c.data&&typeof c.data==="object"){STATS=c.data;HAVE=true;}}
+const saveStats=()=>{if(!Store.demo&&HAVE)ls.set(STATS_KEY,{t:Date.now(),data:STATS});};
+const liked=new Set(ls.get("alnoor_liked",[])); const lastPlay={};
 const st=id=>STATS[id]||(STATS[id]={likes:0,plays:0,comments:0});
 const paint=id=>{const box=document.querySelector(`.social[data-id="${id}"]`);if(!box)return;const s=st(id);
-  box.querySelector(".like .n").textContent=fmt(s.likes);box.querySelector(".cmt .n").textContent=fmt(s.comments);box.querySelector(".plays .n").textContent=fmt(s.plays);
+  const F=HAVE?fmt:()=>"–";box.querySelector(".like .n").textContent=F(s.likes);box.querySelector(".cmt .n").textContent=F(s.comments);box.querySelector(".plays .n").textContent=F(s.plays);
   box.querySelector(".like").setAttribute("aria-pressed",String(liked.has(id)));};
 const paintAll=()=>GAMES.forEach(g=>{if(!g.soon)paint(g.id)});
 const launch=g=>{const now=Date.now();
-  if(now-(lastPlay[g.id]||0)>10000){lastPlay[g.id]=now;st(g.id).plays++;paint(g.id);Store.play(g.id).catch(()=>{});}
-  window.open(withV(g.url,g.rev),"_blank","noopener");};
+  if(now-(lastPlay[g.id]||0)>10000){lastPlay[g.id]=now;st(g.id).plays++;if(!ARRIVED)(early[g.id]=early[g.id]||{likes:0,plays:0}).plays++;paint(g.id);saveStats();Store.play(g.id).catch(()=>{});}
+  window.open(withV(g.url,g.rev||BUILD),"_blank","noopener");};
 const toggleLike=id=>{const on=!liked.has(id),s=st(id),d=on?1:-1;
-  on?liked.add(id):liked.delete(id);s.likes=Math.max(0,s.likes+d);ls.set("alnoor_liked",[...liked]);paint(id);
+  on?liked.add(id):liked.delete(id);s.likes=Math.max(0,s.likes+d);if(!ARRIVED)(early[id]=early[id]||{likes:0,plays:0}).likes+=d;ls.set("alnoor_liked",[...liked]);paint(id);saveStats();
   Store.like(id,d).catch(()=>{on?liked.delete(id):liked.add(id);s.likes=Math.max(0,s.likes-d);ls.set("alnoor_liked",[...liked]);paint(id);toast("تعذّر الاتصال، يرجى المحاولة لاحقاً");});};
 
 const cm=$("#cm"),ct=$("#ctext"),cn=$("#cname"),csend=$("#csend"),comp=$("#comp");let cur=null,opener=null;
@@ -404,19 +437,19 @@ const row=(c,extra)=>{const d=document.createElement("div");d.className="citem";
   const n=document.createElement("b");n.textContent=c.name||"زائر";const t=document.createElement("span");t.textContent=ago(c.time);m.append(n,t);
   const p=document.createElement("p");p.className="ctext";p.textContent=c.text;b.append(m,p);if(extra)b.append(extra);d.append(a,b);return d;};
 const renderDemo=()=>{const box=$("#cdemo");box.textContent="";if(!Store.demo||!cur)return;
-  const n=document.createElement("p");n.className="cnote";
-  n.textContent="وضع تجريبي: الإعجابات والتعليقات وعدّاد اللعب محفوظة على هذا الجهاز فقط. لمشاركتها بين كل الزوار يلزم ربط الموقع بجدول Google (راجع backend/SETUP-ar.md).";box.append(n);
   const pend=Store.pending(cur.id);if(!pend.length)return;
   const w=document.createElement("div");w.className="cmod";const h=document.createElement("b");h.textContent="لوحة المشرف (تجريبية) — تعليقات بانتظار الموافقة";w.append(h);
   pend.forEach(c=>{const act=document.createElement("div");act.className="cbtns";
     const ok=document.createElement("button");ok.type="button";ok.className="cbtn send";ok.textContent="موافقة";ok.onclick=()=>{Store.approve(c.id);$("#cnote").hidden=true;renderList();};
     const no=document.createElement("button");no.type="button";no.className="cbtn cancel";no.textContent="حذف";no.onclick=()=>{Store.remove(c.id);renderDemo();};
     act.append(ok,no);w.append(row(c,act));});box.append(w);};
-const renderList=async()=>{const l=$("#clist"),id=cur.id;l.textContent="جارٍ التحميل…";l.className="cempty";
-  try{const cs=await Store.comments(id);if(!cur||cur.id!==id)return;st(id).comments=cs.length;paint(id);$("#cmn").textContent=fmt(cs.length);
-    l.textContent="";l.className="";
-    if(!cs.length){l.className="cempty";l.textContent="لا توجد تعليقات بعد. شاركنا رأيك!";}else cs.forEach(c=>l.append(row(c)));}
-  catch(e){l.className="cempty";l.textContent="تعذّر تحميل التعليقات.";}
+const renderList=async()=>{const l=$("#clist"),id=cur.id,key="alnoor_cm_"+id;
+  const draw=cs=>{l.textContent="";l.className="";$("#cmn").textContent=fmt(cs.length);
+    if(!cs.length){l.className="cempty";l.textContent="لا توجد تعليقات بعد. شاركنا رأيك!";}else cs.forEach(c=>l.append(row(c)));};
+  const cached=Store.demo?null:ls.get(key,null);
+  if(Array.isArray(cached))draw(cached);else{l.textContent="جارٍ التحميل…";l.className="cempty";}
+  try{const cs=await Store.comments(id);if(!cur||cur.id!==id)return;st(id).comments=cs.length;paint(id);saveStats();draw(cs);if(!Store.demo)ls.set(key,cs.slice(0,50));}
+  catch(e){if(!Array.isArray(cached)){l.className="cempty";l.textContent="تعذّر تحميل التعليقات.";}}
   renderDemo();};
 const openComments=(g,btn)=>{cur=g;opener=btn;$("#cmg").textContent=g.title;$("#cmn").textContent=fmt(st(g.id).comments);
   const nm=ls.get("alnoor_name","");cn.value=nm;avatar($("#cav"),nm);resetComposer();$("#cnote").hidden=true;
@@ -442,7 +475,17 @@ document.addEventListener("click",e=>{
   const cb=e.target.closest(".sbtn.cmt");if(cb){openComments(GAMES.find(x=>x.id===cb.closest(".social").dataset.id),cb);}
 });
 paintAll();
-Store.stats().then(s=>{for(const id in s)Object.assign(st(id),s[id]);paintAll();onStats();}).catch(()=>{});
+(Store.demo?Store.stats():STATS_FETCH).then(s=>{
+  if(!s)return;
+  for(const id in s)Object.assign(st(id),s[id]);
+  for(const id in early){const x=st(id);x.likes=Math.max(0,x.likes+early[id].likes);x.plays=Math.max(0,x.plays+early[id].plays);delete early[id];}
+  ARRIVED=true;HAVE=true;saveStats();paintAll();onStats();
+}).catch(()=>{});
+let lastStats=Date.now();
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState!=="visible"||Store.demo||Date.now()-lastStats<60000)return;
+  lastStats=Date.now();Store.stats().then(s=>{for(const id in s)Object.assign(st(id),s[id]);saveStats();paintAll();}).catch(()=>{});
+});
 
 /* ===== ترتيب الألعاب وتصنيفها =====
    لتغيير أسماء الخيارات عدّلي الحقل t، وأيقونتها i. أنواع الألعاب تُحدَّد بالحقل tags داخل قائمة GAMES. */
@@ -484,6 +527,42 @@ function applyView(animate){
 }
 function onStats(){if(VIEW.sort!=="default")applyView(true);}
 syncChips();applyView(false);
+
+/* ===== دخول المشرفة بكلمة مرور + أزرار الفوتر ===== */
+const ADMIN_URL="admin.html";
+const GATE_DEFAULT={"salt": "n/mW2HuBpD7riJHCSpIPEg==", "hash": "aA5wMglEmdICgztSwPguEmJWEcNJGlxWQcmQEd2Rr6g=", "iter": 100000};
+const kdf=async(pw,salt,iter)=>{const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveBits"]);
+  const bits=await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:Uint8Array.from(atob(salt),c=>c.charCodeAt(0)),iterations:iter},k,256);
+  return btoa(String.fromCharCode(...new Uint8Array(bits)));};
+const gateCfg=()=>{const g=DATA.settings&&DATA.settings.gate;return g&&typeof g.salt==="string"&&typeof g.hash==="string"&&Number.isInteger(g.iter)&&g.iter>=10000&&g.iter<=1000000?g:GATE_DEFAULT;};
+const gt=$("#gt"),gpw=$("#gpw"),gerr=$("#gerr"),gok=$("#gok");let gFail=0,gLock=0;
+const openGate=()=>{gpw.value="";gerr.textContent="";gok.disabled=false;gt.classList.add("open");document.body.style.overflow="hidden";setTimeout(()=>gpw.focus(),50);};
+const closeGate=()=>{gt.classList.remove("open");document.body.style.overflow="";};
+const tryGate=async()=>{
+  const now=Date.now();if(now<gLock){gerr.textContent="انتظري "+Math.ceil((gLock-now)/1000)+" ثانية قبل المحاولة التالية.";return;}
+  if(!(window.crypto&&crypto.subtle)){gerr.textContent="هذا المتصفح لا يدعم التحقق الآمن.";return;}
+  const g=gateCfg();gerr.textContent="";gok.disabled=true;
+  try{if(await kdf(gpw.value,g.salt,g.iter)===g.hash){try{sessionStorage.setItem("alnoor_gate",g.hash)}catch(e){}gFail=0;location.href=ADMIN_URL;return;}}catch(e){}
+  gFail++;if(gFail>=3)gLock=Date.now()+Math.min(60,5*gFail)*1000;
+  gerr.textContent="كلمة المرور غير صحيحة.";gok.disabled=false;gpw.select();
+};
+$("#adminLink").onclick=openGate;gok.onclick=tryGate;$("#gno").onclick=closeGate;
+gpw.addEventListener("keydown",e=>{if(e.key==="Enter")tryGate();});
+gt.addEventListener("click",e=>{if(e.target===gt)closeGate();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&gt.classList.contains("open"))closeGate();});
+$("#ver").textContent=BUILD==="dev"?"":"نسخة "+BUILD;
+$("#refreshLink").onclick=()=>{try{localStorage.removeItem("alnoor_games")}catch(e){}const u=new URL(location.href);u.searchParams.delete("v");u.searchParams.set("r",Date.now());location.replace(u.toString());};
+
+/* ===== تحديث القائمة في الخلفية ===== */
+FETCH.then(d=>{
+  if(!okData(d))return;const txt=JSON.stringify(d);if(txt===SHOWN_TXT)return;
+  saveCache(d);
+  if(document.querySelector("#cm.open,#gm.open,#gt.open"))return;
+  let last=0;try{last=+sessionStorage.getItem("alnoor_data_reload")||0}catch(e){}
+  if(Date.now()-last<30000)return;
+  try{sessionStorage.setItem("alnoor_data_reload",String(Date.now()))}catch(e){return;}
+  location.reload();
+});
 /*__EXTRA__*/
 })();
 </script>

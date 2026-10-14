@@ -82,6 +82,29 @@ details.help ol{margin:12px 0 0; padding-inline-start:22px; line-height:2; color
 .th .tools .ib{width:34px; height:34px; background:rgba(20,5,8,.62); border-color:transparent; color:#fff; backdrop-filter:blur(4px)}
 .th .tools .ib:hover:not(:disabled){background:var(--red)}
 .empty{text-align:center; padding:60px 20px; color:var(--sub); font-weight:700; line-height:2}
+/* tabs + comments */
+.tabs{display:flex; gap:6px; margin-bottom:22px; border-bottom:2px solid var(--line); overflow-x:auto}
+.tab{position:relative; padding:11px 20px; background:none; border:0; border-bottom:3px solid transparent; margin-bottom:-2px; font-weight:900; cursor:pointer; color:var(--sub); white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--red); border-bottom-color:var(--red)}
+.tab .cnt{display:inline-block; min-width:24px; padding:1px 8px; margin-inline-start:6px; border-radius:99px; background:var(--soft); font-size:.8rem; text-align:center}
+.tab .cnt.hot{background:var(--red); color:#fff}
+.av{flex:none; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; color:#fff; font-weight:900; font-size:1.05rem}
+.cl{display:grid; gap:12px}
+.cr{display:flex; gap:14px; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px}
+.cr.wait{border-color:rgba(245,184,0,.75); background:linear-gradient(0deg,var(--card),rgba(245,184,0,.08))}
+.cr .cb{flex:1; min-width:0}
+.cr .cm2{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:.85rem; color:var(--sub)}
+.cr .cm2 b{color:var(--ink); font-size:.98rem}
+.cr .gt{background:var(--soft); border-radius:99px; padding:1px 10px; font-weight:700}
+.cr .sb{border-radius:99px; padding:1px 10px; font-weight:900; font-size:.78rem}
+.cr .sb.ok{background:rgba(34,160,90,.16); color:#1B7A45}
+.cr .sb.wt{background:rgba(245,184,0,.25); color:#8A5A00}
+.cr .tx{margin:6px 0 0; line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere}
+.cr .cx2{display:flex; gap:6px; flex:none; flex-wrap:wrap; justify-content:flex-end}
+.cr .btn.ok{background:#1F9D55; color:#fff}
+select.inp{width:auto; min-width:170px; padding:9px 12px}
+.cfilters{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:16px}
+@media(max-width:560px){.cr{flex-wrap:wrap}.cr .cx2{width:100%; justify-content:flex-start}}
 /* modal */
 .ov{position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(20,5,8,.62)}
 .ov.open{display:flex}
@@ -145,6 +168,7 @@ details.help ol{margin:12px 0 0; padding-inline-start:22px; line-height:2; color
   <h1>⚙️ لوحة المشرف</h1>
   <span class="chip2" id="repoChip" hidden></span>
   <a class="btn light sm" href="index.html" id="siteLink">عرض الموقع</a>
+  <button class="btn light sm" id="pwBtn" type="button" hidden>🔑 كلمة المرور</button>
   <button class="btn light sm" id="logout" type="button" hidden>خروج</button>
 </div></header>
 <main class="wrap" id="app"></main>
@@ -207,6 +231,14 @@ details.help ol{margin:12px 0 0; padding-inline-start:22px; line-height:2; color
 <div class="ov" id="cf"><div class="cd" role="alertdialog" aria-modal="true" aria-labelledby="cfT">
   <h3 id="cfT"></h3><p id="cfP"></p>
   <div class="acts"><button class="btn red" id="cfOk" type="button">حذف نهائي</button><button class="btn ghost" id="cfNo" type="button">تراجع</button></div>
+</div></div>
+<div class="ov" id="pwd"><div class="cd" role="dialog" aria-modal="true" aria-labelledby="pwT">
+  <h3 id="pwT">تغيير كلمة مرور المشرفة</h3>
+  <p>هذه الكلمة تُطلب عند الدخول من رابط «دخول المشرفة» أسفل الموقع، وعند فتح هذه الصفحة.</p>
+  <div class="field"><label for="pw1">كلمة المرور الجديدة</label><input class="inp" id="pw1" type="password" autocomplete="new-password"></div>
+  <div class="field"><label for="pw2">تأكيد كلمة المرور</label><input class="inp" id="pw2" type="password" autocomplete="new-password"></div>
+  <p class="err" id="pwErr"></p>
+  <div class="acts"><button class="btn primary" id="pwOk" type="button">حفظ</button><button class="btn ghost" id="pwNo" type="button">إلغاء</button></div>
 </div></div>
 <div id="toast" role="status"></div>
 
@@ -321,7 +353,7 @@ function showPublished(){const p=$("#pub");if(!p)return;p.hidden=false;p.querySe
 
 /* ---------- login ---------- */
 function renderLogin(msg){
-  $("#repoChip").hidden=true;$("#logout").hidden=true;
+  $("#repoChip").hidden=true;$("#logout").hidden=true;$("#pwBtn").hidden=true;
   const s=saved()||{};
   app.innerHTML=`<div class="login">
     <h2>تسجيل دخول المشرف</h2>
@@ -354,7 +386,7 @@ async function login(){
   if(!token)return err.textContent="الصقي رمز الوصول.";
   const btn=$("#lGo");btn.disabled=true;btn.textContent="جارٍ التحقق…";
   try{
-    const gh=new GH(repo,branch,token);await gh.verify();B=gh;CFG={repo,branch,token,remember:rem};persist(CFG,rem);
+    const gh=new GH(repo,branch,token);await gh.verify();B=gh;const old=saved()||{};CFG={repo,branch,token,remember:rem,cEndpoint:old.cEndpoint,cKey:old.cKey};persist(CFG,rem);
     await loadData();renderDash();
   }catch(e){err.textContent=errMsg(e);btn.disabled=false;btn.textContent="دخول";}
 }
@@ -367,9 +399,9 @@ async function startDemo(){
 }
 async function loadData(){
   const t=await B.getText("games.json");let d={};try{d=t?JSON.parse(t):{}}catch(e){}
-  DATA={categories:Array.isArray(d.categories)&&d.categories.length?d.categories:JSON.parse(JSON.stringify(DEFAULT_CATS)),games:Array.isArray(d.games)?d.games:[]};
+  DATA={categories:Array.isArray(d.categories)&&d.categories.length?d.categories:JSON.parse(JSON.stringify(DEFAULT_CATS)),games:Array.isArray(d.games)?d.games:[],settings:(d.settings&&typeof d.settings==="object")?d.settings:{}};
 }
-$("#logout").onclick=()=>{forget();B=null;renderLogin();};
+$("#logout").onclick=()=>{forget();B=null;CM.items=[];CM.loaded=false;CM.tried=false;CM.pending=0;demoCm=null;VIEW="games";renderLogin();};
 
 /* ---------- dashboard ---------- */
 let QUERY="";
@@ -378,22 +410,35 @@ function thumb(g){
   const ch=esc(Array.from(g.title||"؟")[0]);
   return src?`<img src="${esc(src)}" alt="" loading="lazy" data-ph="${ch}">`:`<div class="ph">${ch}</div>`;
 }
+let VIEW="games";
 function renderDash(){
-  $("#repoChip").hidden=false;$("#repoChip").textContent=CFG.repo;$("#logout").hidden=false;
-  const list=DATA.games.map((g,i)=>({g,i})).filter(x=>!QUERY||(x.g.title+" "+x.g.by).toLowerCase().includes(QUERY));
+  $("#repoChip").hidden=false;$("#repoChip").textContent=CFG.repo;$("#logout").hidden=false;$("#pwBtn").hidden=false;
   const keep=$("#pub")?!$("#pub").hidden:false;
   app.innerHTML=`
-    ${B.demo?`<div class="demobar">🧪 الوضع التجريبي: جرّبي الإضافة والتعديل والحذف بحرية، فلا يُحفظ أي شيء على GitHub.</div>`:""}
+    ${B.demo?`<div class="demobar">🧪 الوضع التجريبي: جرّبي الإضافة والتعديل والحذف وإدارة التعليقات بحرية، فلا يُحفظ أي شيء على GitHub أو في الجدول.</div>`:""}
     <div class="pub" id="pub" ${keep?"":"hidden"}><span>✅</span><span class="msg"></span><span class="sp"></span><a class="btn ghost sm" href="index.html" target="_blank" rel="noopener">فتح الموقع</a></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" type="button" data-v="games" aria-selected="${VIEW==="games"}">🎮 الألعاب <span class="cnt">${DATA.games.length}</span></button>
+      <button class="tab" role="tab" type="button" data-v="comments" aria-selected="${VIEW==="comments"}">💬 التعليقات <span class="cnt ${CM.pending?"hot":""}" id="cmBadge" ${CM.loaded?"":"hidden"}>${CM.pending}</span></button>
+    </div>
+    <div id="view"></div>`;
+  if(keep)showPublished();
+  $$(".tab").forEach(t=>t.onclick=()=>{if(VIEW!==t.dataset.v){VIEW=t.dataset.v;renderDash();}});
+  if(VIEW==="games")renderGames();else renderComments();
+  if(VIEW==="games"&&cmReady()&&!CM.tried)cmLoad().then(updateBadge);
+}
+function updateBadge(){const el=$("#cmBadge");if(!el)return;el.hidden=!CM.loaded;el.textContent=CM.pending;el.classList.toggle("hot",CM.pending>0);}
+function renderGames(){
+  const list=DATA.games.map((g,i)=>({g,i})).filter(x=>!QUERY||(x.g.title+" "+x.g.by).toLowerCase().includes(QUERY));
+  $("#view").innerHTML=`
     <div class="bar">
       <input class="inp grow" id="q" type="search" placeholder="🔎 ابحثي عن لعبة أو طالبة…" value="${esc(QUERY)}" aria-label="بحث">
       <button class="btn primary" id="addBtn" type="button">＋ إضافة لعبة جديدة</button>
     </div>
     ${list.length?`<div class="agrid">${list.map(({g,i})=>card(g,i)).join("")}</div>`:`<div class="empty">${DATA.games.length?"لا توجد نتائج مطابقة.":"لا توجد ألعاب بعد.<br>اضغطي «إضافة لعبة جديدة» لتبدأي."}</div>`}`;
-  if(keep)showPublished();
   $$(".th img").forEach(im=>im.addEventListener("error",()=>{const d=document.createElement("div");d.className="ph";d.textContent=im.dataset.ph;im.replaceWith(d);},{once:true}));
   $("#addBtn").onclick=()=>openEditor("add");
-  $("#q").oninput=e=>{QUERY=e.target.value.trim().toLowerCase();const pos=e.target.selectionStart;renderDash();const q=$("#q");q.focus();q.setSelectionRange(pos,pos);};
+  $("#q").oninput=e=>{QUERY=e.target.value.trim().toLowerCase();const pos=e.target.selectionStart;renderGames();const q=$("#q");q.focus();q.setSelectionRange(pos,pos);};
   $$(".ac [data-act]").forEach(b=>b.onclick=()=>act(b.dataset.act,b.closest(".ac").dataset.id));
 }
 function card(g,i){
@@ -426,6 +471,150 @@ async function act(a,id){
     try{await publish(`ترتيب: ${g.title}`,data=>{const i=data.games.findIndex(x=>x.id===id),j=i+dir;if(i<0||j<0||j>=data.games.length)return;[data.games[i],data.games[j]]=[data.games[j],data.games[i]];},()=>{});}
     catch(e){toast(errMsg(e));}
   }
+}
+
+/* ---------- comments management ---------- */
+const CM={items:[],loaded:false,tried:false,busy:false,pending:0,filter:"pending",game:"all",setup:false,err:""};
+const cmReady=()=>!!(B&&(B.demo||(CFG.cEndpoint&&CFG.cKey)));
+const AGO=[["سنة","سنتين","سنوات",31536000],["شهر","شهرين","أشهر",2592000],["يوم","يومين","أيام",86400],["ساعة","ساعتين","ساعات",3600],["دقيقة","دقيقتين","دقائق",60]];
+const ago=t=>{const x=(Date.now()-new Date(t).getTime())/1000;if(!(x>=60))return"الآن";for(const[a,b,c,n]of AGO){const k=Math.floor(x/n);if(k>=1)return"منذ "+(k===1?a:k===2?b:k+" "+(k<=10?c:a));}return"الآن";};
+const AVC=["#CE1126","#7E0A19","#1AA7C7","#2E8B57","#6B2D5C","#D98A3D","#0B4F6C"];
+const avStyle=n=>{let h=0;for(const c of String(n||""))h=(h*31+c.codePointAt(0))>>>0;return AVC[h%AVC.length];};
+const gameTitle=id=>{const g=DATA.games.find(x=>x.id===id);return g?g.title:id;};
+const ENDPOINT_OK=u=>window.__ALLOW_ANY_ENDPOINT?/^https?:\/\//.test(u):/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u);
+let demoCm=null;
+function seedDemoComments(){
+  const ids=DATA.games.filter(g=>!g.soon).map(g=>g.id),g0=ids[0]||"game",g1=ids[1]||g0,g2=ids[2]||g0,m=60000;
+  const mk=(i,game,name,text,ago_,ok)=>({id:"demo-"+i,game,name,text,time:new Date(Date.now()-ago_*m).toISOString(),approved:ok});
+  return [mk(1,g0,"سارة","لعبة رائعة، الرسومات جميلة جداً! أتمنى مراحل أكثر 👏",8,false),
+          mk(2,g1,"منى","لم أستطع تجاوز المرحلة الثالثة، هل من نصيحة؟",95,false),
+          mk(3,g2,"زائر","أفكار ممتازة ✨",1500,false),
+          mk(4,g0,"فاطمة","استمتعت كثيراً، شكراً للمبدعات!",3000,true),
+          mk(5,g1,"نورة","اللعبة سهلة وممتعة للصغار.",9000,true)];
+}
+async function cmCall(body){
+  if(B.demo){
+    demoCm=demoCm||seedDemoComments();await new Promise(r=>setTimeout(r,120));
+    if(body.action==="admin_list")return{ok:true,comments:[...demoCm].sort((a,b)=>b.time.localeCompare(a.time))};
+    if(body.action==="admin_approve"){(body.ids||[]).forEach(id=>{const c=demoCm.find(x=>x.id===id);if(c)c.approved=body.approved!==false;});return{ok:true};}
+    if(body.action==="admin_delete"){demoCm=demoCm.filter(x=>x.id!==body.id);return{ok:true};}
+    return{error:"unknown action"};
+  }
+  const r=await fetch(CFG.cEndpoint,{method:"POST",body:JSON.stringify({...body,key:CFG.cKey})});
+  if(!r.ok)throw new Error("تعذّر الاتصال بخلفية التعليقات.");
+  let d;try{d=await r.json();}catch(x){throw new Error("استجابة غير متوقعة من الخلفية. تأكدي من نشر التطبيق للجميع (Anyone) ومن صحة الرابط.");}
+  if(d.error){const e=new Error(d.error==="unauthorized"?"مفتاح المشرف غير صحيح.":d.error==="disabled"?"إدارة التعليقات غير مفعّلة: ضعي مفتاحاً في ADMIN_KEY داخل Code.gs وأعيدي النشر.":d.error==="not found"?"التعليق غير موجود (ربما حُذف من الجدول).":d.error);e.api=d.error;throw e;}
+  return d;
+}
+async function cmLoad(){
+  CM.busy=true;CM.tried=true;
+  try{const d=await cmCall({action:"admin_list"});CM.items=(d.comments||[]).map(c=>({...c,approved:c.approved===true||String(c.approved).toUpperCase()==="TRUE"}));CM.loaded=true;CM.err="";}
+  catch(e){CM.loaded=false;CM.err=errMsg(e);}
+  finally{CM.busy=false;}
+  CM.pending=CM.items.filter(c=>!c.approved).length;
+}
+function renderComments(){
+  const v=$("#view");
+  if(!cmReady()||CM.setup){return renderCmSetup(v);}
+  if(!CM.tried){v.innerHTML=`<div class="empty">جارٍ تحميل التعليقات…</div>`;cmLoad().then(()=>{if(VIEW==="comments")renderComments();});return;}
+  if(!CM.loaded){v.innerHTML=`<div class="empty">${esc(CM.err||"تعذّر تحميل التعليقات.")}<br><br><button class="btn ghost" id="cmRetry" type="button">إعادة المحاولة</button> <button class="btn ghost" id="cmSetBtn" type="button">⚙️ إعدادات الربط</button></div>`;
+    $("#cmRetry").onclick=()=>{CM.tried=false;renderComments();};$("#cmSetBtn").onclick=()=>{CM.setup=true;renderComments();};return;}
+  const all=CM.items,byGame=CM.game==="all"?all:all.filter(c=>c.game===CM.game);
+  const cnt={pending:byGame.filter(c=>!c.approved).length,approved:byGame.filter(c=>c.approved).length,all:byGame.length};
+  const list=byGame.filter(c=>CM.filter==="all"||(CM.filter==="pending"?!c.approved:c.approved));
+  const games=[...new Set(all.map(c=>c.game))];
+  const chip=(k,t)=>`<button type="button" class="cc" data-f="${k}" aria-pressed="${CM.filter===k}">${t} <span>${cnt[k]}</span></button>`;
+  v.innerHTML=`
+    <div class="cfilters">
+      <div class="chips">${chip("pending","⏳ بانتظار الموافقة")}${chip("approved","✅ المعتمدة")}${chip("all","الكل")}</div>
+      <select class="inp" id="cmGame" aria-label="تصفية حسب اللعبة"><option value="all">كل الألعاب</option>${games.map(g=>`<option value="${esc(g)}" ${CM.game===g?"selected":""}>${esc(gameTitle(g))}</option>`).join("")}</select>
+      <span style="flex:1"></span>
+      ${CM.filter==="pending"&&list.length?`<button class="btn primary sm" id="cmAll" type="button">✔ موافقة على الكل (${list.length})</button>`:""}
+      <button class="btn ghost sm" id="cmRef" type="button">🔄 تحديث</button>
+      <button class="ib" id="cmSetBtn" type="button" title="إعدادات الربط" aria-label="إعدادات الربط">⚙️</button>
+    </div>
+    ${list.length?`<div class="cl">${list.map(cmRow).join("")}</div>`:`<div class="empty">${CM.filter==="pending"?"لا توجد تعليقات بانتظار الموافقة 🎉":CM.filter==="approved"?"لا توجد تعليقات معتمدة بعد.":"لا توجد تعليقات بعد."}</div>`}`;
+  $$(".cfilters [data-f]").forEach(b=>b.onclick=()=>{CM.filter=b.dataset.f;renderComments();});
+  $("#cmGame").onchange=e=>{CM.game=e.target.value;renderComments();};
+  $("#cmRef").onclick=async()=>{const b=$("#cmRef");b.disabled=true;b.textContent="جارٍ التحديث…";await cmLoad();if(CM.err)toast(CM.err);renderComments();updateBadge();};
+  $("#cmSetBtn").onclick=()=>{CM.setup=true;renderComments();};
+  const all_=$("#cmAll");if(all_)all_.onclick=()=>cmApprove(list.map(c=>c.id),true);
+  $$(".cr [data-cact]").forEach(b=>b.onclick=()=>{const id=b.closest(".cr").dataset.id,a=b.dataset.cact;
+    if(a==="ok")cmApprove([id],true);else if(a==="no")cmApprove([id],false);else cmRemove(id);});
+}
+function cmRow(c){
+  const nm=c.name||"زائر";
+  return `<article class="cr ${c.approved?"":"wait"}" data-id="${esc(c.id)}">
+    <div class="av" style="background:${avStyle(nm)}">${esc(Array.from(nm.trim())[0]||"؟")}</div>
+    <div class="cb">
+      <div class="cm2"><b>${esc(nm)}</b><span class="gt">🎮 ${esc(gameTitle(c.game))}</span><span>${esc(ago(c.time))}</span><span class="sb ${c.approved?"ok":"wt"}">${c.approved?"معتمد":"بانتظار الموافقة"}</span></div>
+      <p class="tx">${esc(c.text)}</p>
+    </div>
+    <div class="cx2">
+      ${c.approved?`<button class="btn ghost sm" data-cact="no" type="button">↩ إلغاء الاعتماد</button>`:`<button class="btn ok sm" data-cact="ok" type="button">✔ موافقة</button>`}
+      <button class="ib danger" data-cact="del" type="button" title="حذف التعليق" aria-label="حذف التعليق">🗑</button>
+    </div></article>`;
+}
+async function cmApprove(ids,approved){
+  if(!ids.length)return;
+  try{
+    await cmCall({action:"admin_approve",ids,approved});
+    CM.items.forEach(c=>{if(ids.includes(c.id))c.approved=approved;});
+    CM.pending=CM.items.filter(c=>!c.approved).length;renderComments();updateBadge();
+    toast(approved?(ids.length>1?`تمت الموافقة على ${ids.length} تعليقات ✔`:"تمت الموافقة، وسيظهر التعليق للزوار ✔"):"أُلغي اعتماد التعليق وأُخفي عن الزوار");
+  }catch(e){toast(errMsg(e));}
+}
+function cmRemove(id){
+  const c=CM.items.find(x=>x.id===id);if(!c)return;
+  askConfirm("حذف هذا التعليق؟",`«${c.text.slice(0,80)}${c.text.length>80?"…":""}» — سيُحذف نهائياً من الجدول.`,"حذف التعليق",async()=>{
+    await cmCall({action:"admin_delete",id});
+    CM.items=CM.items.filter(x=>x.id!==id);CM.pending=CM.items.filter(x=>!x.approved).length;renderComments();updateBadge();toast("تم حذف التعليق");
+  });
+}
+function askConfirm(title,text,okText,fn){
+  $("#cfT").textContent=title;$("#cfP").textContent=text;
+  const cf=$("#cf"),ok=$("#cfOk");cf.classList.add("open");ok.disabled=false;ok.textContent=okText;
+  $("#cfNo").onclick=()=>cf.classList.remove("open");
+  ok.onclick=async()=>{ok.disabled=true;ok.textContent="جارٍ التنفيذ…";
+    try{await fn();cf.classList.remove("open");}catch(e){toast(errMsg(e));ok.disabled=false;ok.textContent=okText;}};
+}
+async function detectEndpoint(){
+  if(B.demo)return"";
+  if(DATA.settings&&DATA.settings.endpoint)return DATA.settings.endpoint;
+  try{const t=await B.getText("index.html");const m=t&&t.match(/const SOCIAL=\{endpoint:"(https?:[^"]+)"/);return m?m[1]:"";}catch(e){return"";}
+}
+async function renderCmSetup(v){
+  v.innerHTML=`<div class="login" style="margin-top:6px">
+    <h2>ربط إدارة التعليقات</h2>
+    <p class="lead">لتتحكمي بالتعليقات من هنا (موافقة، إلغاء اعتماد، حذف) اربطي اللوحة بخلفية Google التي أنشأتِها لتعليقات الموقع. ما زال بإمكانك إدارتها من الجدول أيضاً.</p>
+    <div class="field"><label for="cEp">رابط Apps Script</label><input class="inp" id="cEp" dir="ltr" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(CFG.cEndpoint||"")}" autocomplete="off"><small>الرابط الذي ينتهي بـ /exec بعد النشر.</small></div>
+    <div class="field"><label for="cKey">مفتاح المشرف</label><input class="inp" id="cKey" type="password" dir="ltr" placeholder="نفس القيمة الموضوعة في ADMIN_KEY" value="${esc(CFG.cKey||"")}" autocomplete="off"><small>يُحفظ على هذا الجهاز فقط، ولا يُرفع إلى الموقع.</small></div>
+    <p class="err" id="cErr"></p>
+    <div style="display:flex;gap:10px"><button class="btn primary" id="cGo" type="button">حفظ واتصال</button>${cmReady()?`<button class="btn ghost" id="cNo" type="button">إلغاء</button>`:""}</div>
+    <details class="help"><summary>كيف أحصل على المفتاح؟</summary><ol>
+      <li>افتحي جدول Google ← الإضافات ← Apps Script.</li>
+      <li>في أعلى ملف <b>Code.gs</b> اكتبي كلمة سر طويلة بين علامتي الاقتباس: <code dir="ltr">var ADMIN_KEY = 'كلمة-سر-طويلة';</code></li>
+      <li>احفظي ثم: <b>نشر ← إدارة عمليات النشر ← ✏️ ← إصدار جديد ← نشر</b> (يبقى الرابط نفسه).</li>
+      <li>الصقي الرابط والمفتاح هنا.</li></ol></details>
+  </div>`;
+  if(!CFG.cEndpoint){const ep=await detectEndpoint();const inp=$("#cEp");if(ep&&inp&&!inp.value)inp.value=ep;}
+  const no=$("#cNo");if(no)no.onclick=()=>{CM.setup=false;renderComments();};
+  $("#cKey").addEventListener("keydown",e=>{if(e.key==="Enter")$("#cGo").click();});
+  $("#cGo").onclick=async()=>{
+    const ep=$("#cEp").value.trim(),key=$("#cKey").value.trim(),err=$("#cErr"),btn=$("#cGo");err.textContent="";
+    if(!ENDPOINT_OK(ep))return err.textContent="الرابط غير صحيح. يجب أن يبدأ بـ https://script.google.com/macros/s/ وينتهي بـ /exec";
+    if(key.length<8)return err.textContent="اكتبي مفتاح المشرف.";
+    btn.disabled=true;btn.textContent="جارٍ الاتصال…";
+    const prev={cEndpoint:CFG.cEndpoint,cKey:CFG.cKey};CFG.cEndpoint=ep;CFG.cKey=key;CM.tried=false;
+    await cmLoad();
+    if(!CM.loaded){CFG.cEndpoint=prev.cEndpoint;CFG.cKey=prev.cKey;err.textContent=CM.err||"تعذّر الاتصال.";btn.disabled=false;btn.textContent="حفظ واتصال";return;}
+    persist(CFG,CFG.remember);CM.setup=false;
+    if(!B.demo&&(DATA.settings||{}).endpoint!==ep){
+      try{await publish("ربط التعليقات",data=>{data.settings=data.settings||{};data.settings.endpoint=ep;},()=>{});}
+      catch(e){toast("تم الربط، لكن تعذّر حفظ الرابط للموقع: "+errMsg(e));}
+    }
+    renderDash();toast("تم ربط التعليقات ✔");
+  };
 }
 
 /* ---------- delete ---------- */
@@ -552,10 +741,10 @@ $("#bCoverX").onclick=()=>{if(E.coverURL)URL.revokeObjectURL(E.coverURL);E.cover
 $("#inCover").onchange=async e=>{
   const f=e.target.files[0];e.target.value="";if(!f)return;
   try{
-    const bmp=await createImageBitmap(f),W=1000,H=625,c=document.createElement("canvas");c.width=W;c.height=H;
+    const bmp=await createImageBitmap(f),W=800,H=500,c=document.createElement("canvas");c.width=W;c.height=H;
     const r=Math.max(W/bmp.width,H/bmp.height),w=bmp.width*r,h=bmp.height*r,x=c.getContext("2d");
     x.fillStyle="#000";x.fillRect(0,0,W,H);x.drawImage(bmp,(W-w)/2,(H-h)/2,w,h);
-    const blob=await new Promise(res=>c.toBlob(res,"image/jpeg",.86));
+    const blob=await new Promise(res=>c.toBlob(res,"image/jpeg",.82));
     if(E.coverURL)URL.revokeObjectURL(E.coverURL);
     E.cover=new Uint8Array(await blob.arrayBuffer());E.coverURL=URL.createObjectURL(blob);renderCover();
   }catch(err){toast("تعذّرت قراءة الصورة، جرّبي صورة أخرى.");}
@@ -603,8 +792,60 @@ $("#edS").onclick=async()=>{
   }catch(e){err.textContent=errMsg(e);if(E){E.busy=false;$("#edS").disabled=false;$("#edS").textContent=mode==="add"?"حفظ ونشر":"حفظ التعديلات ونشرها";}$("#prog").hidden=true;}
 };
 
+/* ---------- password gate ---------- */
+const GATE_DEFAULT={"salt": "n/mW2HuBpD7riJHCSpIPEg==", "hash": "aA5wMglEmdICgztSwPguEmJWEcNJGlxWQcmQEd2Rr6g=", "iter": 100000};
+const validGate=g=>g&&typeof g.salt==="string"&&typeof g.hash==="string"&&Number.isInteger(g.iter)&&g.iter>=10000&&g.iter<=1000000;
+const kdf=async(pw,salt,iter)=>{const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveBits"]);
+  const bits=await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:Uint8Array.from(atob(salt),c=>c.charCodeAt(0)),iterations:iter},k,256);
+  return btoa(String.fromCharCode(...new Uint8Array(bits)));};
+async function getGate(){
+  try{const r=await fetch("games.json",{cache:"no-cache"});if(r.ok){const d=await r.json();if(d&&d.settings&&validGate(d.settings.gate))return d.settings.gate;}}catch(e){}
+  return GATE_DEFAULT;
+}
+async function passGate(){
+  if(window.__NO_GATE)return true;
+  const g=await getGate();
+  try{if(sessionStorage.getItem("alnoor_gate")===g.hash)return true;}catch(e){}
+  return new Promise(res=>{
+    $("#repoChip").hidden=true;$("#logout").hidden=true;$("#pwBtn").hidden=true;
+    app.innerHTML=`<div class="login"><h2>🔒 دخول المشرفة</h2><p class="lead">أدخلي كلمة المرور للمتابعة.</p>
+      <div class="field"><label for="gw">كلمة المرور</label><input class="inp" id="gw" type="password" autocomplete="current-password" placeholder="كلمة المرور"></div>
+      <p class="err" id="gErr"></p><button class="btn primary" id="gGo" type="button" style="width:100%">دخول</button></div>`;
+    let fail=0,lock=0;const inp=$("#gw"),err=$("#gErr"),btn=$("#gGo");inp.focus();
+    const go=async()=>{
+      const now=Date.now();if(now<lock){err.textContent="انتظري "+Math.ceil((lock-now)/1000)+" ثانية قبل المحاولة التالية.";return;}
+      if(!(window.crypto&&crypto.subtle)){err.textContent="هذا المتصفح لا يدعم التحقق الآمن.";return;}
+      btn.disabled=true;err.textContent="";
+      try{if(await kdf(inp.value,g.salt,g.iter)===g.hash){try{sessionStorage.setItem("alnoor_gate",g.hash)}catch(e){}res(true);return;}}catch(e){}
+      fail++;if(fail>=3)lock=Date.now()+Math.min(60,5*fail)*1000;
+      err.textContent="كلمة المرور غير صحيحة.";btn.disabled=false;inp.select();
+    };
+    btn.onclick=go;inp.addEventListener("keydown",e=>{if(e.key==="Enter")go();});
+  });
+}
+function openPwDialog(){
+  const d=$("#pwd");$("#pw1").value="";$("#pw2").value="";$("#pwErr").textContent="";d.classList.add("open");setTimeout(()=>$("#pw1").focus(),50);
+  $("#pwNo").onclick=()=>d.classList.remove("open");
+  $("#pwOk").onclick=async()=>{
+    const a=$("#pw1").value,b=$("#pw2").value,err=$("#pwErr"),btn=$("#pwOk");err.textContent="";
+    if(a.length<6)return err.textContent="كلمة المرور قصيرة (6 أحرف على الأقل).";
+    if(a!==b)return err.textContent="كلمتا المرور غير متطابقتين.";
+    if(!(window.crypto&&crypto.subtle))return err.textContent="هذا المتصفح لا يدعم التشفير المطلوب.";
+    btn.disabled=true;btn.textContent="جارٍ الحفظ…";
+    try{
+      const salt=btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16)))),iter=100000,hash=await kdf(a,salt,iter);
+      await publish("تغيير كلمة مرور المشرفة",data=>{data.settings=data.settings||{};data.settings.gate={salt,hash,iter};},()=>{});
+      try{sessionStorage.setItem("alnoor_gate",hash)}catch(e){}
+      d.classList.remove("open");toast("تم تغيير كلمة المرور ✔");
+    }catch(e){err.textContent=errMsg(e);}
+    btn.disabled=false;btn.textContent="حفظ";
+  };
+}
+$("#pwBtn").onclick=openPwDialog;
+
 /* ---------- boot ---------- */
 (async()=>{
+  if(!(await passGate()))return;
   if(window.__AUTO_DEMO){await startDemo();return;}
   const s=saved();
   if(s&&s.token&&s.repo){
