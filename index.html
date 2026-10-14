@@ -106,16 +106,16 @@ footer b{font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.5px; 
 .play[disabled]::before{display:none}
 .play[disabled] svg{display:none}
 /* SOCIAL */
-.social{display:flex; align-items:center; gap:8px; margin:-4px 0 14px}
-.sbtn{display:inline-flex; align-items:center; gap:7px; padding:7px 14px; border-radius:999px; border:1.5px solid rgba(206,17,38,.25);
+.social{display:flex; align-items:stretch; gap:8px; margin:14px 0 0}
+.sbtn{flex:1; justify-content:center; display:inline-flex; align-items:center; gap:7px; padding:7px 14px; border-radius:999px; border:0;
   background:transparent; color:var(--ink); font:inherit; font-weight:800; cursor:pointer; transition:.18s}
-.sbtn:hover{background:rgba(206,17,38,.08); border-color:var(--red)}
+.sbtn:hover{background:rgba(206,17,38,.08)}
 .sbtn svg{width:20px; height:20px; flex:none}
-.sbtn.like[aria-pressed="true"]{color:var(--red); border-color:var(--red); background:rgba(206,17,38,.1)}
+.sbtn.like[aria-pressed="true"]{color:var(--red); background:rgba(206,17,38,.1)}
 .sbtn.like[aria-pressed="true"] svg{fill:var(--red); animation:beat .45s cubic-bezier(.2,1.6,.4,1)}
 @keyframes beat{0%{transform:scale(.6)}60%{transform:scale(1.35)}100%{transform:scale(1)}}
-.plays{margin-inline-start:auto; display:inline-flex; align-items:center; gap:6px; color:var(--sub); font-weight:700; font-size:.92rem}
-.plays svg{width:16px; height:16px}
+.sbtn.plays{cursor:default}
+.sbtn.plays:hover{background:transparent}
 #cm{position:fixed; inset:0; z-index:90; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(0,0,0,.58)}
 #cm.open{display:flex}
 .cpanel{width:min(640px,100%); max-height:min(88vh,780px); display:flex; flex-direction:column; background:var(--card); color:var(--ink);
@@ -152,6 +152,27 @@ footer b{font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.5px; 
 .cmeta span{color:var(--sub); font-size:.82rem}
 .ctext{margin:4px 0 0; line-height:1.75; white-space:pre-wrap; overflow-wrap:anywhere}
 .cempty{text-align:center; color:var(--sub); padding:24px 0; font-weight:600}
+.ribbon{position:absolute; z-index:3; top:12px; inset-inline-end:12px; display:inline-flex; align-items:center; gap:6px; padding:5px 14px 6px;
+  border-radius:999px; font-weight:900; font-size:.86rem; box-shadow:0 6px 16px rgba(0,0,0,.3)}
+.ribbon i{font-style:normal}
+.ribbon.new{background:linear-gradient(135deg,#FFD84D,#F59E0B); color:#4A2600; animation:rpulse 2.4s ease-in-out infinite}
+.ribbon.upd{background:linear-gradient(135deg,#1FB5CC,#0B6F8A); color:#fff}
+@keyframes rpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+/* FILTERS */
+.tools{max-width:980px; margin:-14px auto 34px; display:grid; grid-template-columns:minmax(0,1fr); gap:14px}
+.trow,.chips{min-width:0}
+.trow{display:flex; align-items:center; gap:14px}
+.tl{flex:none; min-width:78px; font-weight:900; color:var(--sub); font-size:.95rem}
+.chips{display:flex; gap:8px; flex-wrap:wrap}
+.chip{display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:999px; border:1.5px solid rgba(206,17,38,.28);
+  background:var(--card); color:var(--ink); font:inherit; font-weight:800; font-size:.95rem; cursor:pointer; transition:.18s; white-space:nowrap}
+.chip:hover{border-color:var(--red); transform:translateY(-1px)}
+.chip[aria-pressed="true"]{background:linear-gradient(135deg,var(--red),var(--deep)); color:#fff; border-color:transparent; box-shadow:0 6px 16px rgba(206,17,38,.3)}
+.chip em{font-style:normal; font-size:.8rem; opacity:.75; font-weight:700}
+.tinfo{margin:0; text-align:center; color:var(--sub); font-weight:700; font-size:.92rem; min-height:1.4em}
+.tempty{text-align:center; padding:40px 0; color:var(--sub); font-weight:800; font-size:1.1rem}
+@media(max-width:640px){.trow{flex-direction:column; align-items:stretch; gap:6px}
+  .chips{flex-wrap:nowrap; overflow-x:auto; padding:2px 2px 8px; scrollbar-width:none}.chips::-webkit-scrollbar{display:none}}
 .toast{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); transform:translate(-50%,120px); z-index:20;
   background:var(--ink); color:var(--bg); padding:12px 24px; border-radius:999px; font-weight:700; transition:transform .4s cubic-bezier(.2,1.2,.4,1); max-width:90vw; text-align:center}
 .toast.show{transform:translate(-50%,0)}
@@ -177,6 +198,12 @@ footer b{font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.5px; 
     <h2>معرض الألعاب</h2>
     <div class="count">عدد الألعاب: <b id="cnt">0</b></div>
   </div>
+  <section class="tools" id="tools" aria-label="ترتيب الألعاب وتصنيفها">
+    <div class="trow"><span class="tl">ترتيب حسب</span><div class="chips" id="sortChips" role="group" aria-label="ترتيب الألعاب"></div></div>
+    <div class="trow"><span class="tl">نوع اللعبة</span><div class="chips" id="catChips" role="group" aria-label="نوع اللعبة"></div></div>
+    <p class="tinfo" id="tinfo" aria-live="polite"></p>
+  </section>
+  <div class="tempty" id="tempty" hidden>لا توجد ألعاب من هذا النوع بعد 🎮</div>
   <div class="grid" id="grid"></div>
 </main>
 
@@ -207,26 +234,29 @@ footer b{font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.5px; 
 <div class="toast" id="toast"></div>
 
 <script>
-/* ===== عدّلي هنا: أضيفي ألعابكم الحقيقية =====
-   title: اسم اللعبة | by: أسماء الطالبات | url: رابط اللعبة | img: رابط/صورة اختيارية (بدلها يظهر رسم تلقائي) */
-const GAMES = [
-  {title:"Pearls of Bahrain",   by:"سارة التيتون", url:"games/pearls-of-bahrain.html", img:"assets/pearls-of-bahrain.jpg", theme:"pearl"},
-  {title:"دروب الأفق",          by:"جمان حسين محمد", url:"games/horizon-paths.html", img:"assets/horizon-paths.jpg", theme:"race"},
-  {title:"الهروب من القلعة",     by:"فاطمة سعيد جعفر", url:"games/escape-the-fort.html", theme:"fort", img:"assets/escape-the-fort.jpg"},
-  {title:"سودوكو اللؤلؤ",        by:"زهراء علي المختار · رقية حسين الحايكي", url:"games/pearl-sudoku.html", img:"assets/pearl-sudoku.jpg", theme:"space"},
-  {title:"من سيربح المليون؟ – النسخة البحرينية", by:"أطياب منصور", url:"games/who-wants-to-be-a-millionaire.html", img:"assets/who-wants-to-be-a-millionaire.jpg", theme:"maze"},
-  {title:"المحقق الصغير",       by:"زهراء علي المختار · رقية حسين الحايكي", url:"games/little-detective.html", img:"assets/little-detective.jpg", theme:"tree"},
-  {title:"برق الثعلب",          by:"طالبة 3فيز1", url:"games/fox-lightning.html", img:"assets/fox-lightning.jpg", theme:"falcon"},
-  {title:"Spark's Adventure",    by:"", soon:true, url:"", img:"assets/sparks-adventure.jpg", theme:"quiz"},
-  {title:"أرض دلمون",           by:"زينب", url:"games/dilmun-land.html", img:"assets/dilmun-land.jpg", theme:"pearl"},
-  {title:"سفينة دلمون",         by:"", soon:true, url:"", theme:"ship"},
-  {title:"حديقة النور",         by:"", soon:true, url:"", theme:"garden"}
-];
+(async()=>{
+/* ===== قائمة الألعاب =====
+   تُقرأ من games.json (ويعدّلها المشرف من صفحة admin.html). النسخة المضمّنة هنا احتياطية عند تعذّر تحميل الملف. */
+const DEFAULT_DATA = {"categories": [{"k": "national", "t": "وطنية", "i": "🏛️"}, {"k": "puzzle", "t": "ألغاز وبازل", "i": "🧩"}, {"k": "adventure", "t": "مغامرات", "i": "🏃"}, {"k": "arcade", "t": "أركيد وسرعة", "i": "⚡"}, {"k": "quiz", "t": "معلومات ومسابقات", "i": "🧠"}], "games": [{"id": "pearls-of-bahrain", "title": "Pearls of Bahrain", "by": "سارة التيتون", "url": "games/pearls-of-bahrain.html", "img": "assets/pearls-of-bahrain.jpg", "tags": ["national", "arcade"], "theme": "pearl", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "horizon-paths", "title": "دروب الأفق", "by": "جمان حسين محمد", "url": "games/horizon-paths.html", "img": "assets/horizon-paths.jpg", "tags": ["adventure"], "theme": "race", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "escape-the-fort", "title": "الهروب من القلعة", "by": "فاطمة سعيد جعفر", "url": "games/escape-the-fort.html", "img": "assets/escape-the-fort.jpg", "tags": ["puzzle"], "theme": "fort", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "pearl-sudoku", "title": "سودوكو اللؤلؤ", "by": "زهراء علي المختار · رقية حسين الحايكي", "url": "games/pearl-sudoku.html", "img": "assets/pearl-sudoku.jpg", "tags": ["puzzle"], "theme": "space", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "who-wants-to-be-a-millionaire", "title": "من سيربح المليون؟ – النسخة البحرينية", "by": "أطياب منصور", "url": "games/who-wants-to-be-a-millionaire.html", "img": "assets/who-wants-to-be-a-millionaire.jpg", "tags": ["quiz", "national"], "theme": "maze", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "little-detective", "title": "المحقق الصغير", "by": "زهراء علي المختار · رقية حسين الحايكي", "url": "games/little-detective.html", "img": "assets/little-detective.jpg", "tags": ["puzzle"], "theme": "tree", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "fox-lightning", "title": "برق الثعلب", "by": "طالبة 3فيز1", "url": "games/fox-lightning.html", "img": "assets/fox-lightning.jpg", "tags": ["adventure", "arcade"], "theme": "falcon", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "sparks-adventure", "title": "Spark's Adventure", "by": "", "url": "", "img": "assets/sparks-adventure.jpg", "tags": ["adventure"], "theme": "quiz", "soon": true, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "dilmun-land", "title": "أرض دلمون", "by": "زينب", "url": "games/dilmun-land.html", "img": "assets/dilmun-land.jpg", "tags": ["national", "adventure"], "theme": "pearl", "soon": false, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "dilmun-ship", "title": "سفينة دلمون", "by": "", "url": "", "img": "", "tags": ["national"], "theme": "ship", "soon": true, "added": "", "updated": "", "rev": "", "note": ""}, {"id": "garden-of-light", "title": "حديقة النور", "by": "", "url": "", "img": "", "tags": [], "theme": "garden", "soon": true, "added": "", "updated": "", "rev": "", "note": ""}]};
+const loadData=async()=>{
+  try{
+    const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),4000);
+    const r=await fetch("games.json?t="+Date.now(),{cache:"no-store",signal:ctl.signal});clearTimeout(tm);
+    if(r.ok){const d=await r.json();
+      if(d&&Array.isArray(d.games)&&d.games.length)return {categories:Array.isArray(d.categories)?d.categories:DEFAULT_DATA.categories,games:d.games};}
+  }catch(e){}
+  return DEFAULT_DATA;
+};
+const DATA=await loadData();
+const GAMES=DATA.games.filter(g=>g&&g.title).map(g=>({...g,
+  tags:Array.isArray(g.tags)?g.tags:[],
+  url:/^(games\/|https?:\/\/)/.test(g.url||"")?g.url:"",
+  img:/^(assets\/|data:image\/|https?:\/\/)/.test(g.img||"")?g.img:""}));
 
 /* ===== الإعجابات والتعليقات وعدّاد اللعب =====
    endpoint: رابط Google Apps Script بعد النشر (الخطوات في backend/SETUP-ar.md).
    إذا تُرك فارغاً يعمل الموقع بالوضع التجريبي (البيانات تُحفظ على جهاز الزائر فقط). */
-const SOCIAL={endpoint:"https://script.google.com/macros/s/AKfycbwLYU3UvkW45XdCZv2hZW25g7oyyUFIug_oNFx590zEk7-l0PLzyp8TgB5Gv0kq0YkV/exec"};
+const SOCIAL={endpoint:""};
 GAMES.forEach((g,i)=>{g.id=g.id||(g.url?g.url.split("/").pop().replace(/\.html$/,""):"game-"+(i+1));});
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const uid=()=>(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
@@ -256,11 +286,36 @@ const AGO=[["سنة","سنتين","سنوات",31536000],["شهر","شهرين",
 const ago=t=>{const s=(Date.now()-new Date(t).getTime())/1000;if(!(s>=60))return"الآن";for(const[a,b,c,n]of AGO){const k=Math.floor(s/n);if(k>=1)return"منذ "+(k===1?a:k===2?b:k+" "+(k<=10?c:a));}return"الآن";};
 const AVC=["#CE1126","#7E0A19","#1AA7C7","#2E8B57","#6B2D5C","#D98A3D","#0B4F6C"];
 const avatar=(el,name)=>{name=(name||"").trim();let h=0;for(const c of name)h=(h*31+c.codePointAt(0))>>>0;el.textContent=Array.from(name)[0]||"؟";el.style.background=AVC[h%AVC.length];};
-const socialBar=g=>`<div class="social" data-id="${g.id}">
+const socialBar=g=>`<div class="social" data-id="${esc(g.id)}">
         <button class="sbtn like" type="button" aria-pressed="false" aria-label="إعجاب"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg><span class="n">0</span></button>
         <button class="sbtn cmt" type="button" aria-label="التعليقات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg><span class="n">0</span></button>
-        <span class="plays" title="عدد مرات اللعب"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span class="n">0</span> مرّة</span>
+        <span class="sbtn plays" title="عدد مرات اللعب" aria-label="عدد مرات اللعب"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg><span class="n">0</span></span>
       </div>`;
+
+/* ===== تحديث تلقائي للنسخة القديمة (تجاوز التخزين المؤقت) =====
+   BUILD يتغيّر مع كل نسخة جديدة، وكذلك الحقل build في ملف version.json.
+   إذا عدّلتِ الموقع يدوياً فغيّري القيمتين معاً إلى أي نص جديد. */
+const BUILD="20261014-042316";
+const withV=(u,v)=>(!u||u.startsWith("data:")||u.startsWith("#"))?u:u+(u.includes("?")?"&":"?")+"v="+encodeURIComponent(v||BUILD);
+const esc=x=>String(x==null?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+/* شارة «جديدة» / «تحديث» تظهر تلقائياً لمدة BADGE_DAYS يوماً من تاريخ الإضافة أو آخر تحديث */
+const BADGE_DAYS=14;
+const stamp=g=>{const a=Date.parse(g.added)||0,u=Date.parse(g.updated)||0,t=Math.max(a,u);return t};
+const badge=g=>{if(g.soon)return"";const a=Date.parse(g.added)||0,u=Date.parse(g.updated)||0,t=Math.max(a,u);
+  if(!t||Date.now()-t>BADGE_DAYS*864e5)return"";const upd=u&&(!a||u-a>864e5);
+  return `<span class="ribbon ${upd?"upd":"new"}"${g.note?` title="${esc(g.note)}"`:""}><i aria-hidden="true">${upd?"🔄":"✨"}</i>${upd?"تحديث":"جديدة"}</span>`;};
+async function checkUpdate(){
+  if(location.protocol==="file:"||BUILD==="dev")return;
+  try{
+    const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;
+    const {build}=await r.json();const u=new URL(location.href);
+    if(!build||build===BUILD||u.searchParams.get("v")===build)return;
+    if(document.querySelector("#cm.open,#gm.open"))return;
+    u.searchParams.set("v",build);location.replace(u.toString());
+  }catch(e){}
+}
+checkUpdate();
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate();});
 
 /* ---- generated cover art (used when no img is given) ---- */
 const rnd=(s=>()=>(s=(s*9301+49297)%233280)/233280);
@@ -295,14 +350,14 @@ $("#logo").innerHTML=["Al Noor","School","Gaming Studio"].map((w,wi)=>{
 
 $("#grid").innerHTML=GAMES.map((g,i)=>`
   <div class="wrap" style="--i:${i}"><article class="card${g.soon?' soon':''}">
-    <div class="art"><span class="num">#${String(i+1).padStart(2,"0")}</span>${g.soon?'<span class="stamp">قريباً</span>':""}${g.img?`<img src="${g.img}" alt="${g.title}" style="width:100%;height:100%;object-fit:cover">`:cover(g.theme,i)}</div>
+    <div class="art"><span class="num">#${String(i+1).padStart(2,"0")}</span>${badge(g)}${g.soon?'<span class="stamp">قريباً</span>':""}${g.img?`<img src="${esc(withV(g.img,g.rev))}" alt="${esc(g.title)}" style="width:100%;height:100%;object-fit:cover">`:cover(g.theme,i)}</div>
     <div class="body">
-      <h3>${g.title}</h3>
-      ${g.by?`<p class="by"><b>${/[·،&]/.test(g.by)?"إعداد الطالبات":"إعداد الطالبة"}:</b><br>${g.by}</p>`:""}
-      ${g.soon?"":socialBar(g)}
+      <h3>${esc(g.title)}</h3>
+      ${g.by?`<p class="by"><b>${/[·،&]/.test(g.by)?"إعداد الطالبات":"إعداد الطالبة"}:</b><br>${esc(g.by)}</p>`:""}
       <button class="play" type="button" data-i="${i}"${g.soon?" disabled":""}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>${g.soon?"قريباً":"PLAY"}
       </button>
+      ${g.soon?"":socialBar(g)}
     </div></article></div>`).join("");
 
 /* ---- interactions ---- */
@@ -333,7 +388,7 @@ const paint=id=>{const box=document.querySelector(`.social[data-id="${id}"]`);if
 const paintAll=()=>GAMES.forEach(g=>{if(!g.soon)paint(g.id)});
 const launch=g=>{const now=Date.now();
   if(now-(lastPlay[g.id]||0)>10000){lastPlay[g.id]=now;st(g.id).plays++;paint(g.id);Store.play(g.id).catch(()=>{});}
-  window.open(g.url,"_blank","noopener");};
+  window.open(withV(g.url,g.rev),"_blank","noopener");};
 const toggleLike=id=>{const on=!liked.has(id),s=st(id),d=on?1:-1;
   on?liked.add(id):liked.delete(id);s.likes=Math.max(0,s.likes+d);ls.set("alnoor_liked",[...liked]);paint(id);
   Store.like(id,d).catch(()=>{on?liked.delete(id):liked.add(id);s.likes=Math.max(0,s.likes-d);ls.set("alnoor_liked",[...liked]);paint(id);toast("تعذّر الاتصال، يرجى المحاولة لاحقاً");});};
@@ -387,7 +442,50 @@ document.addEventListener("click",e=>{
   const cb=e.target.closest(".sbtn.cmt");if(cb){openComments(GAMES.find(x=>x.id===cb.closest(".social").dataset.id),cb);}
 });
 paintAll();
-Store.stats().then(s=>{for(const id in s)Object.assign(st(id),s[id]);paintAll();}).catch(()=>{});
+Store.stats().then(s=>{for(const id in s)Object.assign(st(id),s[id]);paintAll();onStats();}).catch(()=>{});
+
+/* ===== ترتيب الألعاب وتصنيفها =====
+   لتغيير أسماء الخيارات عدّلي الحقل t، وأيقونتها i. أنواع الألعاب تُحدَّد بالحقل tags داخل قائمة GAMES. */
+const SORTS=[
+  {k:"default",t:"الترتيب الأصلي",i:"🔢"},
+  {k:"popular",t:"الأكثر شعبية",i:"🔥",tip:"تُحتسب من عدد مرات اللعب والإعجابات والتعليقات"},
+  {k:"plays",t:"الأكثر لعباً",i:"▶️"},
+  {k:"likes",t:"الأكثر إعجاباً",i:"❤️"},
+  {k:"newest",t:"الأحدث",i:"🆕",tip:"الألعاب المضافة أو المحدَّثة مؤخراً أولاً"}];
+const CATS=[{k:"all",t:"الكل",i:"✨"},...(Array.isArray(DATA.categories)?DATA.categories:[]).filter(c=>c&&c.k&&c.t).map(c=>({k:String(c.k),t:String(c.t),i:String(c.i||"🎮")}))];
+const VIEW={sort:"default",cat:"all"};
+const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const WR=[...document.querySelectorAll("#grid .wrap")];
+const score={popular:g=>{const s=st(g.id);return s.plays+3*s.likes+2*s.comments},plays:g=>st(g.id).plays,likes:g=>st(g.id).likes,newest:g=>stamp(g)};
+const buildChips=(host,arr,key,count)=>{
+  host.innerHTML=arr.map(o=>`<button type="button" class="chip" data-k="${esc(o.k)}" aria-pressed="false"${o.tip?` title="${o.tip}"`:""}><span aria-hidden="true">${esc(o.i)}</span>${esc(o.t)}${count?` <em>${count(o)}</em>`:""}</button>`).join("");
+  host.addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b||VIEW[key]===b.dataset.k)return;VIEW[key]=b.dataset.k;syncChips();applyView(true);});};
+const syncChips=()=>{[["#sortChips","sort"],["#catChips","cat"]].forEach(([h,k])=>document.querySelectorAll(h+" .chip").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.k===VIEW[k]))));};
+buildChips($("#sortChips"),SORTS,"sort");
+buildChips($("#catChips"),CATS,"cat",o=>o.k==="all"?GAMES.length:GAMES.filter(g=>(g.tags||[]).includes(o.k)).length);
+function applyView(animate){
+  const first=animate&&!REDUCED?WR.map(w=>w.hidden?null:w.getBoundingClientRect()):null;
+  const vis=GAMES.map((g,i)=>({g,i,w:WR[i]})).filter(x=>VIEW.cat==="all"||(x.g.tags||[]).includes(VIEW.cat));
+  const f=score[VIEW.sort];
+  vis.sort((a,b)=>!f?a.i-b.i:((!!a.g.soon-!!b.g.soon)||(f(b.g)-f(a.g))||a.i-b.i));
+  WR.forEach(w=>{w.hidden=true;});
+  vis.forEach((x,n)=>{x.w.hidden=false;x.w.style.order=n;x.w.classList.add("in");});
+  if(first&&!REDUCED)vis.forEach(x=>{const a=first[x.i];
+    if(!a){x.w.animate([{opacity:0,transform:"scale(.92)"},{opacity:1,transform:"none"}],{duration:350,easing:"ease-out"});return;}
+    const b=x.w.getBoundingClientRect(),dx=a.left-b.left,dy=a.top-b.top;
+    if(dx||dy)x.w.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"translate(0,0)"}],{duration:420,easing:"cubic-bezier(.2,.8,.2,1)"});});
+  $("#tempty").hidden=vis.length>0;
+  const cat=CATS.find(c=>c.k===VIEW.cat),srt=SORTS.find(c=>c.k===VIEW.sort);
+  let msg=`عرض ${vis.length} من ${GAMES.length} لعبة`;
+  if(VIEW.cat!=="all")msg+=` · ${cat.t}`;
+  if(f){msg+=VIEW.sort==="newest"?" · الأحدث أولاً":` · الأكثر ${VIEW.sort==="popular"?"شعبية":VIEW.sort==="plays"?"لعباً":"إعجاباً"} أولاً`;
+    if(!vis.some(x=>!x.g.soon&&f(x.g)>0))msg+=" (لا توجد بيانات بعد، فيبقى الترتيب الأصلي)";}
+  $("#tinfo").textContent=msg;
+}
+function onStats(){if(VIEW.sort!=="default")applyView(true);}
+syncChips();applyView(false);
+/*__EXTRA__*/
+})();
 </script>
 </body>
 </html>
