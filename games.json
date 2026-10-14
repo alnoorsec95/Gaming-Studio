@@ -24,6 +24,11 @@
    "k": "quiz",
    "t": "معلومات ومسابقات",
    "i": "🧠"
+  },
+  {
+   "k": "c-mv8bx7csipvh",
+   "t": "البناء والاستراتيجية",
+   "i": "🏗️"
   }
  ],
  "games": [
@@ -236,6 +241,22 @@
    "added": "2026-10-14T15:56:09.555Z",
    "updated": "",
    "rev": "mv8al1ar",
+   "note": ""
+  },
+  {
+   "id": "game-8g1o",
+   "title": "عالم المكعبات",
+   "by": "زينب علي",
+   "url": "",
+   "img": "assets/game-8g1o.jpg",
+   "tags": [
+    "c-mv8bx7csipvh"
+   ],
+   "theme": "space",
+   "soon": true,
+   "added": "2026-10-14T16:43:51.001Z",
+   "updated": "",
+   "rev": "mv8cad7e",
    "note": ""
   }
  ]
