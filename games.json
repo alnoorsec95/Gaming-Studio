@@ -259,6 +259,22 @@
    "updated": "",
    "rev": "mv8cad7e",
    "note": ""
+  },
+  {
+   "id": "game-3ttx",
+   "title": "رحلة حول العالم",
+   "by": "ماريا مهدي",
+   "url": "games/game-3ttx/index.html",
+   "img": "assets/game-3ttx.jpg",
+   "tags": [
+    "quiz"
+   ],
+   "theme": "quiz",
+   "soon": false,
+   "added": "2026-10-15T10:31:46.294Z",
+   "updated": "",
+   "rev": "mv9efq0m",
+   "note": ""
   }
  ]
 }
