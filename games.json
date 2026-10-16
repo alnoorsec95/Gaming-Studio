@@ -248,16 +248,17 @@
    "id": "game-8g1o",
    "title": "عالم المكعبات",
    "by": "زينب علي",
-   "url": "",
+   "url": "games/game-8g1o/index.html",
    "img": "assets/game-8g1o.jpg",
    "tags": [
-    "c-mv8bx7csipvh"
+    "c-mv8bx7csipvh",
+    "adventure"
    ],
    "theme": "space",
-   "soon": true,
+   "soon": false,
    "added": "2026-10-14T16:43:51.001Z",
-   "updated": "",
-   "rev": "mv8cad7e",
+   "updated": "2026-10-16T07:06:22.170Z",
+   "rev": "mvamjfbu",
    "note": ""
   },
   {
