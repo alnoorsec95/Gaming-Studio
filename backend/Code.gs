@@ -9,6 +9,7 @@
 var STATS = 'Stats';
 var COMMENTS = 'Comments';
 var MAX_NAME = 30, MAX_TEXT = 500, MAX_SHOWN = 100;
+var DAILY = 'Daily';
 var CACHE_TTL = 120; // ثوانٍ: تسريع قراءة الإحصاءات والتعليقات (يُمسح الكاش تلقائياً عند أي تغيير)
 
 function cacheGet_(k) { try { var v = CacheService.getScriptCache().get(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
@@ -35,6 +36,10 @@ function setup() {
   st.setFrozenRows(1);
   var cm = ss.getSheetByName(COMMENTS) || ss.insertSheet(COMMENTS);
   if (cm.getLastRow() === 0) cm.appendRow(['id', 'game', 'name', 'text', 'time', 'approved']);
+  var dy = ss.getSheetByName(DAILY) || ss.insertSheet(DAILY);   // نشاط يومي لحساب «Trending now»
+  if (dy.getLastRow() === 0) dy.appendRow(['date', 'game', 'plays', 'likes']);
+  dy.getRange('A:B').setNumberFormat('@');
+  dy.setFrozenRows(1);
   cm.getRange('A:E').setNumberFormat('@');          // نص عادي (يمنع تحويل النص إلى صيغة)
   cm.setFrozenRows(1);
   cm.setColumnWidth(4, 420);
@@ -82,6 +87,21 @@ function sheet_(name) {
   return s;
 }
 
+function dateStr_(v) { return v instanceof Date ? Utilities.formatDate(v, 'UTC', 'yyyy-MM-dd') : String(v); }
+function dayAgo_(n) { return Utilities.formatDate(new Date(Date.now() - n * 864e5), 'UTC', 'yyyy-MM-dd'); }
+
+function daily_(game, field, delta) {
+  var sh = sheet_(DAILY), n = sh.getLastRow(), today = dayAgo_(0), row = -1, i;
+  if (n > 1) {
+    var start = Math.max(2, n - 300), rows = sh.getRange(start, 1, n - start + 1, 2).getValues();
+    for (i = rows.length - 1; i >= 0; i--) if (dateStr_(rows[i][0]) === today && rows[i][1] === game) { row = start + i; break; }
+  }
+  if (row < 0) { if (delta < 0) return; sh.appendRow([today, game, 0, 0]); row = sh.getLastRow(); }
+  var rng = sh.getRange(row, 3, 1, 2), v = rng.getValues()[0], idx = field === 'likes' ? 1 : 0;
+  v[idx] = Math.max(0, (Number(v[idx]) || 0) + delta);
+  rng.setValues([v]);
+}
+
 function isApproved_(v) { return v === true || String(v).toUpperCase() === 'TRUE'; }
 
 function stats_() {
@@ -89,7 +109,19 @@ function stats_() {
   var st = sheet_(STATS), n = st.getLastRow();
   if (n > 1) {
     var rows = st.getRange(2, 1, n - 1, 3).getValues();
-    for (i = 0; i < rows.length; i++) out[rows[i][0]] = { likes: Number(rows[i][1]) || 0, plays: Number(rows[i][2]) || 0, comments: 0 };
+    for (i = 0; i < rows.length; i++) out[rows[i][0]] = { likes: Number(rows[i][1]) || 0, plays: Number(rows[i][2]) || 0, comments: 0, rp: 0, rl: 0, rc: 0 };
+  }
+  var cutDay = dayAgo_(6), cutIso = new Date(Date.now() - 7 * 864e5).toISOString();
+  var dy = sheet_(DAILY), dn = dy.getLastRow();
+  if (dn > 1) {
+    var ds = Math.max(2, dn - 600), dr = dy.getRange(ds, 1, dn - ds + 1, 4).getValues();
+    for (i = 0; i < dr.length; i++) {
+      if (dateStr_(dr[i][0]) < cutDay) continue;
+      var gg = dr[i][1];
+      if (!out[gg]) out[gg] = { likes: 0, plays: 0, comments: 0, rp: 0, rl: 0, rc: 0 };
+      out[gg].rp += Number(dr[i][2]) || 0;
+      out[gg].rl += Number(dr[i][3]) || 0;
+    }
   }
   var cm = sheet_(COMMENTS), m = cm.getLastRow();
   if (m > 1) {
@@ -97,8 +129,9 @@ function stats_() {
     for (i = 0; i < cs.length; i++) {
       if (!isApproved_(cs[i][5])) continue;
       var g = cs[i][1];
-      if (!out[g]) out[g] = { likes: 0, plays: 0, comments: 0 };
+      if (!out[g]) out[g] = { likes: 0, plays: 0, comments: 0, rp: 0, rl: 0, rc: 0 };
       out[g].comments++;
+      if (String(cs[i][4]) >= cutIso) out[g].rc++;
     }
   }
   return out;
@@ -126,6 +159,7 @@ function bump_(game, field, delta) {
   var rng = st.getRange(row, 1, 1, 3), v = rng.getValues()[0], idx = field === 'likes' ? 1 : 2;
   v[idx] = Math.max(0, (Number(v[idx]) || 0) + delta);
   rng.setValues([v]);
+  daily_(game, field, delta);
   return { ok: true, likes: Number(v[1]) || 0, plays: Number(v[2]) || 0 };
 }
 

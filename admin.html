@@ -72,6 +72,7 @@ details.help ol{margin:12px 0 0; padding-inline-start:22px; line-height:2; color
 .tag.new{background:linear-gradient(135deg,#FFD84D,#F59E0B); color:#4A2600}
 .tag.upd{background:linear-gradient(135deg,#1FB5CC,#0B6F8A)}
 .tag.soon{background:rgba(206,17,38,.9)}
+.tag.pin{background:linear-gradient(135deg,#FF8A00,#E11D48)}
 .ab{padding:16px 18px 18px; display:flex; flex-direction:column; gap:10px; flex:1}
 .ab h3{margin:0; font-size:1.12rem; font-weight:900; line-height:1.5}
 .ab .by{margin:0; color:var(--sub); font-size:.92rem; min-height:1.4em}
@@ -105,6 +106,11 @@ details.help ol{margin:12px 0 0; padding-inline-start:22px; line-height:2; color
 select.inp{width:auto; min-width:170px; padding:9px 12px}
 .cfilters{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:16px}
 @media(max-width:560px){.cr{flex-wrap:wrap}.cr .cx2{width:100%; justify-content:flex-start}}
+.diag{list-style:none; margin:0 0 16px; padding:0; display:grid; gap:8px}
+.diag li{display:grid; gap:2px; padding:10px 14px; border-radius:12px; border:1px solid var(--line); line-height:1.7}
+.diag li span{color:var(--sub); font-size:.9rem}
+.diag li.ok{border-color:rgba(34,160,90,.5); background:rgba(34,160,90,.08)}
+.diag li.bad{border-color:rgba(206,17,38,.5); background:rgba(206,17,38,.07)}
 /* modal */
 .ov{position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(20,5,8,.62)}
 .ov.open{display:flex}
@@ -217,6 +223,7 @@ select.inp{width:auto; min-width:170px; padding:9px 12px}
     <section>
       <h3><span class="n">4</span>خيارات</h3>
       <label class="opt"><span class="sw"><input type="checkbox" id="oSoon"><i></i></span><span>قريباً<small>تظهر البطاقة بختم «قريباً» دون زر لعب</small></span></label>
+      <label class="opt"><span class="sw"><input type="checkbox" id="oTrend"><i></i></span><span>📌 تثبيت في Trending now<small>تظهر في الصف الأول دائماً، حتى لو لم يكن عليها نشاط بعد</small></span></label>
       <label class="opt" id="oBadgeRow"><span class="sw"><input type="checkbox" id="oBadge" checked><i></i></span><span>إظهار شارة «تحديث»<small>تظهر على البطاقة لمدة 14 يوماً بعد التحديث</small></span></label>
       <div class="field"><label for="fNote">ملاحظة التحديث <small>(اختياري — تظهر عند مرور المؤشر على الشارة)</small></label><input class="inp" id="fNote" maxlength="80" placeholder="مثال: أضفنا مرحلة جديدة" autocomplete="off"></div>
     </section>
@@ -443,7 +450,7 @@ function renderGames(){
 }
 function card(g,i){
   const k=badgeKind(g),n=DATA.games.length;
-  const st=[g.soon?`<span class="tag soon">قريباً</span>`:"",k==="new"?`<span class="tag new">✨ جديدة</span>`:"",k==="upd"?`<span class="tag upd">🔄 تحديث</span>`:""].join("");
+  const st=[g.soon?`<span class="tag soon">قريباً</span>`:"",k==="new"?`<span class="tag new">✨ جديدة</span>`:"",k==="upd"?`<span class="tag upd">🔄 تحديث</span>`:"",g.trending&&!g.soon?`<span class="tag pin">📌 Trending</span>`:""].join("");
   return `<article class="ac" data-id="${esc(g.id)}">
     <div class="th">${thumb(g)}<div class="st">${st}</div>
       <div class="tools">
@@ -503,7 +510,7 @@ async function cmCall(body){
   const r=await fetch(CFG.cEndpoint,{method:"POST",body:JSON.stringify({...body,key:CFG.cKey})});
   if(!r.ok)throw new Error("تعذّر الاتصال بخلفية التعليقات.");
   let d;try{d=await r.json();}catch(x){throw new Error("استجابة غير متوقعة من الخلفية. تأكدي من نشر التطبيق للجميع (Anyone) ومن صحة الرابط.");}
-  if(d.error){const e=new Error(d.error==="unauthorized"?"مفتاح المشرف غير صحيح.":d.error==="disabled"?"إدارة التعليقات غير مفعّلة: ضعي مفتاحاً في ADMIN_KEY داخل Code.gs وأعيدي النشر.":d.error==="not found"?"التعليق غير موجود (ربما حُذف من الجدول).":d.error);e.api=d.error;throw e;}
+  if(d.error){const e=new Error(d.error==="unauthorized"?"مفتاح المشرف غير صحيح.":d.error==="disabled"?"إدارة التعليقات غير مفعّلة: ضعي مفتاحاً في ADMIN_KEY داخل Code.gs وأعيدي النشر.":(d.error==="bad game"||d.error==="unknown action")?"الخلفية ما زالت بنسخة قديمة من Code.gs: الصقي الكود الجديد ثم انشري «إصداراً جديداً» (نشر ← إدارة عمليات النشر ← ✏️ ← إصدار جديد).":d.error==="not found"?"التعليق غير موجود (ربما حُذف من الجدول).":d.error);e.api=d.error;throw e;}
   return d;
 }
 async function cmLoad(){
@@ -578,6 +585,50 @@ function askConfirm(title,text,okText,fn){
   ok.onclick=async()=>{ok.disabled=true;ok.textContent="جارٍ التنفيذ…";
     try{await fn();cf.classList.remove("open");}catch(e){toast(errMsg(e));ok.disabled=false;ok.textContent=okText;}};
 }
+
+async function rawPost(ep,body){
+  const r=await fetch(ep,{method:"POST",body:JSON.stringify(body)});const t=await r.text();
+  try{return JSON.parse(t);}catch(e){throw new Error("html");}
+}
+async function diagnose(ep,key){
+  const out=[],add=(ok,t,h)=>out.push({ok,t,h});
+  let reach=false;
+  try{
+    const r=await fetch(ep+"?action=stats",{cache:"no-store"}),t=await r.text();let j=null;try{j=JSON.parse(t);}catch(e){}
+    if(j&&typeof j==="object"&&("stats" in j||"ok" in j)){reach=true;add(true,"الوصول إلى الرابط","الخلفية تردّ بشكل سليم.");}
+    else add(false,"الوصول إلى الرابط","الرابط يعيد صفحة بدل بيانات. غالباً النشر ليس «Anyone» (Who has access)، أو لم تمنحي الصلاحيات (شغّلي الدالة setup ووافقي)، أو الرابط ليس رابط النشر الصحيح الذي ينتهي بـ /exec.");
+  }catch(e){add(false,"الوصول إلى الرابط","تعذّر الوصول. تأكدي أن الرابط صحيح، وأن «Who has access» مضبوط على Anyone، وأن لديك اتصالاً بالإنترنت.");}
+  if(!reach)return out;
+  let versionOk=false;
+  try{
+    const d=await rawPost(ep,{action:"admin_list",key:"__probe__"});
+    if(d.error==="unauthorized"){versionOk=true;add(true,"نسخة الخلفية ومفتاح المشرف","الخلفية بالنسخة الجديدة وقيمة ADMIN_KEY مضبوطة.");}
+    else if(d.error==="disabled")add(false,"مفتاح المشرف في الخلفية","قيمة ADMIN_KEY فارغة أو أقصر من 12 حرفاً في Code.gs. اكتبي كلمة سر طويلة ثم انشري «إصداراً جديداً».");
+    else if(d.error==="bad game"||d.error==="unknown action")add(false,"نسخة الخلفية","الخلفية ما زالت بنسخة قديمة من Code.gs. الصقي الكود الجديد كاملاً ثم: نشر ← إدارة عمليات النشر ← ✏️ ← إصدار جديد ← نشر.");
+    else add(false,"نسخة الخلفية","استجابة غير متوقعة: "+JSON.stringify(d).slice(0,80));
+  }catch(e){add(false,"نسخة الخلفية","تعذّر إرسال الطلب إلى الخلفية. أعيدي نشرها كتطبيق ويب (Anyone) وتأكدي من الصلاحيات.");}
+  if(!versionOk)return out;
+  if(!key){add(false,"مفتاح المشرف","اكتبي مفتاح المشرف.");return out;}
+  try{
+    const d=await rawPost(ep,{action:"admin_list",key});
+    if(d.ok)add(true,"مفتاح المشرف","المفتاح صحيح، وقراءة التعليقات تعمل ("+(d.comments||[]).length+" تعليق).");
+    else if(d.error==="unauthorized")add(false,"مفتاح المشرف","المفتاح لا يطابق ADMIN_KEY. انسخيه من Code.gs كما هو بلا مسافات زائدة.");
+    else add(false,"مفتاح المشرف",String(d.error||"خطأ غير معروف"));
+  }catch(e){add(false,"مفتاح المشرف","تعذّر الاتصال أثناء فحص المفتاح.");}
+  return out;
+}
+function showDiag(list){
+  const box=$("#cDiag");if(!box)return;
+  box.innerHTML=list.map(x=>`<li class="${x.ok?"ok":"bad"}"><b>${x.ok?"✅":"❌"} ${esc(x.t)}</b><span>${esc(x.h)}</span></li>`).join("");
+  box.hidden=!list.length;
+}
+async function runDiag(){
+  const ep=$("#cEp").value.trim(),key=$("#cKey").value.trim(),btn=$("#cTest"),err=$("#cErr");err.textContent="";
+  if(B.demo){showDiag([{ok:true,t:"الوضع التجريبي",h:"لا حاجة لفحص الاتصال هنا."}]);return;}
+  if(!/^https?:\/\//.test(ep)){err.textContent="اكتبي رابط Apps Script أولاً.";return;}
+  btn.disabled=true;btn.textContent="جارٍ الفحص…";
+  try{showDiag(await diagnose(ep,key));}finally{btn.disabled=false;btn.textContent="🔍 فحص الاتصال";}
+}
 async function detectEndpoint(){
   if(B.demo)return"";
   if(DATA.settings&&DATA.settings.endpoint)return DATA.settings.endpoint;
@@ -590,7 +641,8 @@ async function renderCmSetup(v){
     <div class="field"><label for="cEp">رابط Apps Script</label><input class="inp" id="cEp" dir="ltr" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(CFG.cEndpoint||"")}" autocomplete="off"><small>الرابط الذي ينتهي بـ /exec بعد النشر.</small></div>
     <div class="field"><label for="cKey">مفتاح المشرف</label><input class="inp" id="cKey" type="password" dir="ltr" placeholder="نفس القيمة الموضوعة في ADMIN_KEY" value="${esc(CFG.cKey||"")}" autocomplete="off"><small>يُحفظ على هذا الجهاز فقط، ولا يُرفع إلى الموقع.</small></div>
     <p class="err" id="cErr"></p>
-    <div style="display:flex;gap:10px"><button class="btn primary" id="cGo" type="button">حفظ واتصال</button>${cmReady()?`<button class="btn ghost" id="cNo" type="button">إلغاء</button>`:""}</div>
+    <ul class="diag" id="cDiag" hidden></ul>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="cGo" type="button">حفظ واتصال</button><button class="btn ghost" id="cTest" type="button">🔍 فحص الاتصال</button>${cmReady()?`<button class="btn ghost" id="cNo" type="button">إلغاء</button>`:""}</div>
     <details class="help"><summary>كيف أحصل على المفتاح؟</summary><ol>
       <li>افتحي جدول Google ← الإضافات ← Apps Script.</li>
       <li>في أعلى ملف <b>Code.gs</b> اكتبي كلمة سر طويلة بين علامتي الاقتباس: <code dir="ltr">var ADMIN_KEY = 'كلمة-سر-طويلة';</code></li>
@@ -598,6 +650,7 @@ async function renderCmSetup(v){
       <li>الصقي الرابط والمفتاح هنا.</li></ol></details>
   </div>`;
   if(!CFG.cEndpoint){const ep=await detectEndpoint();const inp=$("#cEp");if(ep&&inp&&!inp.value)inp.value=ep;}
+  $("#cTest").onclick=runDiag;
   const no=$("#cNo");if(no)no.onclick=()=>{CM.setup=false;renderComments();};
   $("#cKey").addEventListener("keydown",e=>{if(e.key==="Enter")$("#cGo").click();});
   $("#cGo").onclick=async()=>{
@@ -607,7 +660,9 @@ async function renderCmSetup(v){
     btn.disabled=true;btn.textContent="جارٍ الاتصال…";
     const prev={cEndpoint:CFG.cEndpoint,cKey:CFG.cKey};CFG.cEndpoint=ep;CFG.cKey=key;CM.tried=false;
     await cmLoad();
-    if(!CM.loaded){CFG.cEndpoint=prev.cEndpoint;CFG.cKey=prev.cKey;err.textContent=CM.err||"تعذّر الاتصال.";btn.disabled=false;btn.textContent="حفظ واتصال";return;}
+    if(!CM.loaded){CFG.cEndpoint=prev.cEndpoint;CFG.cKey=prev.cKey;err.textContent=(CM.err||"تعذّر الاتصال.")+" — التشخيص أدناه:";btn.textContent="جارٍ التشخيص…";
+      try{showDiag(await diagnose(ep,key));}catch(e){err.textContent=CM.err||"تعذّر الاتصال.";}
+      btn.disabled=false;btn.textContent="حفظ واتصال";return;}
     persist(CFG,CFG.remember);CM.setup=false;
     if(!B.demo&&(DATA.settings||{}).endpoint!==ep){
       try{await publish("ربط التعليقات",data=>{data.settings=data.settings||{};data.settings.endpoint=ep;},()=>{});}
@@ -646,7 +701,7 @@ function openEditor(mode,g,focusFiles){
   E={mode,g:g||null,files:null,entry:"",cover:null,coverURL:"",tags:new Set(g?g.tags||[]:[]),newCats:[],busy:false};
   $("#edT").textContent=mode==="add"?"إضافة لعبة جديدة":`تعديل: ${g.title}`;
   $("#fTitle").value=g?g.title:"";$("#fBy").value=g?g.by||"":"";$("#fNote").value=g?g.note||"":"";
-  $("#oSoon").checked=g?!!g.soon:false;$("#oBadge").checked=true;
+  $("#oSoon").checked=g?!!g.soon:false;$("#oTrend").checked=g?g.trending===true:false;$("#oBadge").checked=true;
   $("#oBadgeRow").hidden=mode==="add";
   $("#filesHint").textContent=mode==="add"?"":"اتركيها فارغة إن لم تريدي تغيير ملفات اللعبة";
   $("#fErr").textContent="";$("#edErr").textContent="";$("#prog").hidden=true;
@@ -757,7 +812,7 @@ ed.addEventListener("mousedown",e=>{if(e.target===ed)closeEditor();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if($("#cf").classList.contains("open"))$("#cf").classList.remove("open");else if(E)closeEditor();}});
 $("#edS").onclick=async()=>{
   if(!E||E.busy)return;
-  const title=$("#fTitle").value.trim(),by=$("#fBy").value.trim(),note=$("#fNote").value.trim(),soon=$("#oSoon").checked,badge=$("#oBadge").checked;
+  const title=$("#fTitle").value.trim(),by=$("#fBy").value.trim(),note=$("#fNote").value.trim(),soon=$("#oSoon").checked,badge=$("#oBadge").checked,pin=$("#oTrend").checked;
   const err=$("#edErr");err.textContent="";
   if(!title){err.textContent="اكتبي اسم اللعبة.";$("#fTitle").focus();return;}
   if(E.mode==="add"&&!soon&&!E.files){err.textContent="اختاري ملف اللعبة أو مجلدها، أو فعّلي «قريباً» لإضافة البطاقة بدونها.";$("#secFiles").scrollIntoView({block:"center"});return;}
@@ -772,11 +827,14 @@ $("#edS").onclick=async()=>{
       if(mode==="add"){
         const id=uniqueId(slugify(title),data.games),g={id,title,by,url:"",img:"",tags,theme:themeFor(),soon:!!soon,added:nowIso(),updated:"",rev:revId(),note};
         if(files){g.url=await readAll(id);g.soon=false;}
+        if(pin&&!g.soon)g.trending=true;
         if(cover){up.push({path:`assets/${id}.jpg`,data:cover});g.img=`assets/${id}.jpg`;localPrev[`assets/${id}.jpg`]=E.coverURL;}
         data.games.push(g);return plan;
       }
       const g=data.games.find(x=>x.id===gid);if(!g)throw new Error("اللعبة لم تعد موجودة في القائمة.");
       Object.assign(g,{title,by,tags,note,soon:!!soon});
+      if(files)g.soon=false;
+      if(pin&&!soon)g.trending=true;else delete g.trending;
       if(!g.theme)g.theme=themeFor();
       if(files){
         const dir=`games/${g.id}/`,old=pathOfUrl(g.url);

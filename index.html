@@ -107,6 +107,17 @@ footer b{font-family:'Bungee',sans-serif; font-weight:400; letter-spacing:.5px; 
 .play[disabled],.play[disabled]:hover{cursor:default; background:#E4DCD6; color:#8A7B72; box-shadow:none; transform:none}
 .play[disabled]::before{display:none}
 .play[disabled] svg{display:none}
+/* TRENDING */
+.sec{grid-column:1/-1; display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin:4px 2px -6px}
+.sec[hidden]{display:none}
+.sec h2{margin:0; font-size:1.7rem; font-weight:900; letter-spacing:.2px}
+.sec p{margin:0; color:var(--sub); font-weight:600}
+.trendbar{display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; font-size:.92rem; font-weight:800; color:var(--ink);
+  background:rgba(245,184,0,.16); border-top:1px solid rgba(245,184,0,.55)}
+.trendbar[hidden]{display:none}
+.trendbar .flame{font-size:1.05rem; line-height:1}
+.trendbar .rk{background:var(--red); color:#fff; border-radius:999px; padding:0 9px; font-size:.76rem; line-height:1.75; font-weight:900}
+.wrap.trend .card{box-shadow:0 0 0 1.5px var(--gold),0 16px 34px -18px rgba(126,10,25,.55)}
 /* FOOTER LINKS + GATE */
 .flinks{margin-top:16px; display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; font-size:.85rem}
 .flinks button{background:rgba(255,255,255,.14); color:#fff; border:0; border-radius:999px; padding:6px 15px; font:inherit; font-weight:700; cursor:pointer; transition:.15s}
@@ -331,7 +342,7 @@ const socialBar=g=>`<div class="social" data-id="${esc(g.id)}">
 /* ===== تحديث تلقائي للنسخة القديمة (تجاوز التخزين المؤقت) =====
    BUILD يتغيّر مع كل نسخة جديدة، وكذلك الحقل build في ملف version.json.
    إذا عدّلتِ الموقع يدوياً فغيّري القيمتين معاً إلى أي نص جديد. */
-const BUILD="20261014-094428";
+const BUILD="20261016-062237";
 const withV=(u,v)=>(!u||!v||u.startsWith("data:")||u.startsWith("#"))?u:u+(u.includes("?")?"&":"?")+"v="+encodeURIComponent(v);
 const esc=x=>String(x==null?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 /* شارة «جديدة» / «تحديث» تظهر تلقائياً لمدة BADGE_DAYS يوماً من تاريخ الإضافة أو آخر تحديث */
@@ -388,7 +399,7 @@ $("#grid").innerHTML=GAMES.map((g,i)=>`
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>${g.soon?"قريباً":"PLAY"}
       </button>
       ${g.soon?"":socialBar(g)}
-    </div></article></div>`).join("");
+    </div>${g.soon?"":'<div class="trendbar" hidden><span class="flame" aria-hidden="true">🔥</span><b>Trending now</b><span class="rk"></span></div>'}</article></div>`).join("");
 
 /* ---- interactions ---- */
 const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("show"),2600);};
@@ -410,7 +421,7 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{
 document.querySelectorAll(".wrap,#head").forEach(el=>io.observe(el));
 
 /* ===== social wiring ===== */
-let STATS={},HAVE=Store.demo,ARRIVED=Store.demo;const early={};
+let STATS={},HAVE=Store.demo,ARRIVED=Store.demo,STATS_FAIL=false;const early={};
 if(!Store.demo){const c=ls.get(STATS_KEY,null);if(c&&c.data&&typeof c.data==="object"){STATS=c.data;HAVE=true;}}
 const saveStats=()=>{if(!Store.demo&&HAVE)ls.set(STATS_KEY,{t:Date.now(),data:STATS});};
 const liked=new Set(ls.get("alnoor_liked",[])); const lastPlay={};
@@ -476,21 +487,21 @@ document.addEventListener("click",e=>{
 });
 paintAll();
 (Store.demo?Store.stats():STATS_FETCH).then(s=>{
-  if(!s)return;
+  if(!s){STATS_FAIL=!Store.demo;debugPanel();return;}
   for(const id in s)Object.assign(st(id),s[id]);
   for(const id in early){const x=st(id);x.likes=Math.max(0,x.likes+early[id].likes);x.plays=Math.max(0,x.plays+early[id].plays);delete early[id];}
-  ARRIVED=true;HAVE=true;saveStats();paintAll();onStats();
+  ARRIVED=true;HAVE=true;saveStats();paintAll();onStats();debugPanel();
 }).catch(()=>{});
 let lastStats=Date.now();
 document.addEventListener("visibilitychange",()=>{
   if(document.visibilityState!=="visible"||Store.demo||Date.now()-lastStats<60000)return;
-  lastStats=Date.now();Store.stats().then(s=>{for(const id in s)Object.assign(st(id),s[id]);saveStats();paintAll();}).catch(()=>{});
+  lastStats=Date.now();Store.stats().then(s=>{for(const id in s)Object.assign(st(id),s[id]);saveStats();paintAll();onStats();}).catch(()=>{});
 });
 
 /* ===== ترتيب الألعاب وتصنيفها =====
    لتغيير أسماء الخيارات عدّلي الحقل t، وأيقونتها i. أنواع الألعاب تُحدَّد بالحقل tags داخل قائمة GAMES. */
 const SORTS=[
-  {k:"default",t:"الترتيب الأصلي",i:"🔢"},
+  {k:"default",t:"الافتراضي",i:"🔢"},
   {k:"popular",t:"الأكثر شعبية",i:"🔥",tip:"تُحتسب من عدد مرات اللعب والإعجابات والتعليقات"},
   {k:"plays",t:"الأكثر لعباً",i:"▶️"},
   {k:"likes",t:"الأكثر إعجاباً",i:"❤️"},
@@ -506,13 +517,49 @@ const buildChips=(host,arr,key,count)=>{
 const syncChips=()=>{[["#sortChips","sort"],["#catChips","cat"]].forEach(([h,k])=>document.querySelectorAll(h+" .chip").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.k===VIEW[k]))));};
 buildChips($("#sortChips"),SORTS,"sort");
 buildChips($("#catChips"),CATS,"cat",o=>o.k==="all"?GAMES.length:GAMES.filter(g=>(g.tags||[]).includes(o.k)).length);
+const TRENDING_COUNT=3;   /* عدد الألعاب التي تظهر في «Trending now» */
+const totalScore=g=>{const s=st(g.id);return s.plays+3*s.likes+2*s.comments};
+/* الرواج = نشاط آخر 7 أيام (لعب + 3×إعجاب + 2×تعليق) إن وفّرته الخلفية، وإلا الإجمالي */
+const trendScore=g=>{const s=st(g.id);return(s.rp!=null||s.rl!=null||s.rc!=null)?(s.rp||0)+3*(s.rl||0)+2*(s.rc||0):totalScore(g)};
+function trendIds(){
+  const pool=GAMES.map((g,i)=>({g,i})).filter(x=>!x.g.soon&&x.g.url);
+  let rank=pool.map(x=>({...x,sc:trendScore(x.g)}));
+  if(!rank.some(x=>x.sc>0))rank=pool.map(x=>({...x,sc:totalScore(x.g)}));
+  const byScore=(a,b)=>b.sc-a.sc||a.i-b.i;
+  const pinned=rank.filter(x=>x.g.trending===true).sort(byScore),data=rank.filter(x=>x.g.trending!==true&&x.sc>0).sort(byScore);
+  return [...pinned,...data].slice(0,TRENDING_COUNT).map(x=>x.g.id);
+}
+const secT=document.createElement("div"),secA=document.createElement("div"),secS=document.createElement("div");
+secT.className="sec hot";secT.hidden=true;secT.innerHTML='<h2>🔥 Trending now</h2><p>الأكثر رواجاً بين الزائرين هذا الأسبوع</p>';
+secA.className="sec";secA.hidden=true;secA.innerHTML='<h2>🎮 جميع الألعاب</h2>';
+secS.className="sec";secS.hidden=true;secS.innerHTML='<h2>🔜 قريباً</h2><p>ألعاب قيد الإعداد تصل قريباً</p>';
+$("#grid").append(secT,secA,secS);
+let lastTrend="";
 function applyView(animate){
   const first=animate&&!REDUCED?WR.map(w=>w.hidden?null:w.getBoundingClientRect()):null;
+  const T=trendIds(),TS=new Set(T);
+  WR.forEach((w,i)=>{const id=GAMES[i].id,on=TS.has(id),t=w.querySelector(".trendbar");if(t){t.hidden=!on;if(on)t.querySelector(".rk").textContent="#"+(T.indexOf(id)+1);}w.classList.toggle("trend",on);});
+  const defView=VIEW.cat==="all"&&VIEW.sort==="default";
+  const sections=defView&&T.length>0;
   const vis=GAMES.map((g,i)=>({g,i,w:WR[i]})).filter(x=>VIEW.cat==="all"||(x.g.tags||[]).includes(VIEW.cat));
   const f=score[VIEW.sort];
-  vis.sort((a,b)=>!f?a.i-b.i:((!!a.g.soon-!!b.g.soon)||(f(b.g)-f(a.g))||a.i-b.i));
+  /* الألعاب «قريباً» دائماً في النهاية، ثم الترتيب المختار */
+  vis.sort((a,b)=>(!!a.g.soon-!!b.g.soon)||(!f?a.i-b.i:((f(b.g)-f(a.g))||a.i-b.i)));
+  let lead=0,restPlayable=0;
+  if(sections){const tv=T.map(id=>vis.find(x=>x.g.id===id)).filter(Boolean),rest=vis.filter(x=>!TS.has(x.g.id));
+    lead=tv.length;restPlayable=rest.filter(x=>!x.g.soon).length;vis.length=0;vis.push(...tv,...rest);}
+  const soonN=vis.filter(x=>x.g.soon).length,showS=defView&&soonN>0&&soonN<vis.length;
+  secT.hidden=!sections;secA.hidden=!(sections&&restPlayable>0);secS.hidden=!showS;
   WR.forEach(w=>{w.hidden=true;});
-  vis.forEach((x,n)=>{x.w.hidden=false;x.w.style.order=n;x.w.classList.add("in");});
+  let ord=0,placedS=false;
+  if(sections)secT.style.order=ord++;
+  vis.forEach((x,n)=>{
+    if(sections&&n===lead&&!secA.hidden)secA.style.order=ord++;
+    if(showS&&x.g.soon&&!placedS){secS.style.order=ord++;placedS=true;}
+    x.w.hidden=false;x.w.style.order=ord++;x.w.classList.add("in");
+    const num=x.w.querySelector(".num");if(num)num.textContent="#"+String(n+1).padStart(2,"0");
+  });
+  lastTrend=T.join(",");
   if(first&&!REDUCED)vis.forEach(x=>{const a=first[x.i];
     if(!a){x.w.animate([{opacity:0,transform:"scale(.92)"},{opacity:1,transform:"none"}],{duration:350,easing:"ease-out"});return;}
     const b=x.w.getBoundingClientRect(),dx=a.left-b.left,dy=a.top-b.top;
@@ -525,7 +572,7 @@ function applyView(animate){
     if(!vis.some(x=>!x.g.soon&&f(x.g)>0))msg+=" (لا توجد بيانات بعد، فيبقى الترتيب الأصلي)";}
   $("#tinfo").textContent=msg;
 }
-function onStats(){if(VIEW.sort!=="default")applyView(true);}
+function onStats(){if(VIEW.sort!=="default"||trendIds().join(",")!==lastTrend)applyView(true);}
 syncChips();applyView(false);
 
 /* ===== دخول المشرفة بكلمة مرور + أزرار الفوتر ===== */
@@ -563,6 +610,24 @@ FETCH.then(d=>{
   try{sessionStorage.setItem("alnoor_data_reload",String(Date.now()))}catch(e){return;}
   location.reload();
 });
+
+/* ===== لوحة التشخيص: افتحي الموقع بإضافة ?debug لآخر الرابط ===== */
+const DEBUG=/[?&]debug(=|&|$)/.test(location.search);
+function debugPanel(){
+  if(!DEBUG)return;let el=$("#dbg");
+  if(!el){el=document.createElement("pre");el.id="dbg";
+    el.style.cssText="position:fixed;left:8px;bottom:8px;z-index:200;max-width:92vw;max-height:60vh;overflow:auto;margin:0;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,.88);color:#9fffb0;font:12px/1.6 monospace;direction:ltr;text-align:left;white-space:pre-wrap";
+    document.body.append(el);}
+  const act=GAMES.filter(g=>!g.soon).map(g=>[g.id,st(g.id)]).filter(([,x])=>x.plays||x.likes||x.comments||x.rp||x.rl||x.rc);
+  el.textContent=["BUILD: "+BUILD,
+    "backend: "+(Store.demo?"NOT configured -> demo mode (check SOCIAL.endpoint)":"configured"),
+    "stats: "+(STATS_FAIL?"FAILED to load (check Apps Script deployment: Who has access = Anyone, new version)":ARRIVED?"loaded":"waiting..."),
+    "games with activity: "+act.length,
+    "trending now: ["+trendIds().join(", ")+"]",
+    "pinned (games.json): ["+GAMES.filter(g=>g.trending).map(g=>g.id).join(", ")+"]","",
+    ...act.map(([id,x])=>id+"  "+JSON.stringify(x))].join("\n");
+}
+debugPanel();
 /*__EXTRA__*/
 })();
 </script>
