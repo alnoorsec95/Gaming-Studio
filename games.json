@@ -70,7 +70,7 @@
    "id": "escape-the-fort",
    "title": "الهروب من القلعة",
    "by": "فاطمة سعيد جعفر",
-   "url": "games/escape-the-fort.html",
+   "url": "games/escape-the-fort/index.html",
    "img": "assets/escape-the-fort.jpg",
    "tags": [
     "puzzle"
@@ -78,8 +78,8 @@
    "theme": "fort",
    "soon": false,
    "added": "",
-   "updated": "",
-   "rev": "",
+   "updated": "2026-10-18T04:50:07.532Z",
+   "rev": "mvdcjx2k",
    "note": ""
   },
   {
